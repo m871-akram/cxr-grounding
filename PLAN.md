@@ -113,9 +113,11 @@ Code moves Mac → GitHub → cluster (`git pull`); results come back the same w
 job (U-Net, batch generation, audit, LoRA) saves checkpoints or partial results and resumes
 when resubmitted.
 
-Storage (steady state, approximate): Python env 6-8 GB, NIH 512-px subset ~3-4 GB, model weights
-~15 GB, CheXmask CSV for NIH 2.2 GB, outputs ~5 GB. Total ~35 GB. The raw NIH zip (~45 GB) sits
-in `data/raw` only until the subset is built (node `/tmp` has ~35 GB free, too small).
+Storage. The home folder has a per-user quota that `df` does not show (it shows the whole
+server). Anything big and temporary goes to the node's `/tmp` inside the job (~35 GB free,
+deleted at the end): the NIH image zips (12 × 2-4 GB) and the full CheXmask file (2.2 GB).
+Kept in home: Python env 6-8 GB, NIH 512-px subset ~2 GB, CheXmask landmarks ~115 MB, outputs,
+and later the model weights (~15 GB, to be placed once the quota is known).
 Google Drive is the archive (subset tarball, final checkpoints, results), never a training source:
 install the `rclone` binary in `~/bin`, run `rclone config` (Google Drive, answer "n" to auto
 config), run `rclone authorize "drive"` on the Mac and paste the token back; then
@@ -150,6 +152,7 @@ Rules:
 | Gated access slow | Start with data prep and the U-Net; they need no access |
 | 4 h job limit | Checkpoint and resume; chain jobs with `sbatch --dependency=afterany:<id>` |
 | Readers are not radiologists | Report as a pilot; try to add a radiology resident |
+| Home quota (~10 GB) too small | Asked support for more; fallback: model weights downloaded to the node's `/tmp` in each job (~3-5 min), smaller image subset |
 | Fine-tuning does not help | The audit alone (weeks 1-3) is a complete result |
 
 ## 8. One-page spec template
@@ -177,6 +180,13 @@ Rules:
 **2026-09-28, cluster.** Partitions `rtx6000` (default; 3 Quadro RTX 6000 per node), `a40`
 (one node, 3 A40), `v100`; 4 h limit everywhere. A full GPU (`--gres=gpu:1`) is accepted; a
 shard is 1/6 of a GPU and shares its memory. Compute nodes reach Hugging Face, Kaggle, PhysioNet
-and PyPI. Home is on the file server (3.4 TB free, no quota shown); node `/tmp` ~35 GB free.
-Smoke test (torch 2.6, CUDA 12.4): RTX 6000 13 TFLOPS fp32 / 90 fp16; A40 24 fp32 / 114 fp16 /
-118 bf16.
+and PyPI. Home is on the file server; node `/tmp` ~35 GB free. Smoke test (torch 2.6, CUDA 12.4):
+RTX 6000 13 TFLOPS fp32 / 90 fp16; A40 24 fp32 / 114 fp16 / 118 bf16.
+
+**2026-09-28, first data job.** Failed with "Disk quota exceeded" while downloading the 45 GB
+Kaggle zip: home has a per-user quota even though `df` shows 3.4 TB free. Fix: big downloads go
+to the node's `/tmp` and only the 512-px subset is kept; images now come as 12 separate zips.
+Only one data job at a time (two jobs wrote the same files; the script now stops the newer one).
+Home usage after cleanup: ~7.6 GB (the Python env is most of it), and the quota was hit ~2.3 GB
+higher, so the quota is about 10 GB. The project needs ~25 GB (env 6, models ~13, data 2,
+outputs ~3): asked Ensimag support for more space. Meanwhile: steps 1-3 only (`IMAGES=0`).

@@ -50,12 +50,13 @@ If the project is not in `~/cxr-grounding`, set `export PROJECT_DIR=/path/to/cxr
 
 ## Data and models
 
-- **NIH ChestX-ray14** (Wang et al., CVPR 2017), from Kaggle `nih-chest-xrays/data` (needs a
-  Kaggle API token in `~/.kaggle/kaggle.json`). PA views only for the edits: the CTR rule does not
-  hold on AP films.
+- **NIH ChestX-ray14** (Wang et al., CVPR 2017). Labels from Kaggle `nih-chest-xrays/data` (needs a
+  Kaggle API token in `~/.kaggle/kaggle.json`); images from a Hugging Face mirror of the NIH release
+  (`alkzar90/NIH-Chest-X-ray-dataset`, 12 zips read one at a time in the node's `/tmp`, so only the
+  ~2 GB subset is stored). PA views only for the edits: the CTR rule does not hold on AP films.
 - **CheXmask** v1.0 (Gaggion et al., Scientific Data 2024; PhysioNet, CC BY 4.0): heart and lung
-  contours for every NIH image. The job downloads the NIH file from a Hugging Face mirror and checks
-  it against PhysioNet's official SHA-256.
+  contours for every NIH image. The job downloads the NIH file from a Hugging Face mirror, checks it
+  against PhysioNet's official SHA-256 and keeps only the landmark columns (~115 MB).
 - **RadEdit** (`microsoft/radedit`): research use only; weights are not redistributed.
 - **MedGemma** (`google/medgemma-4b-it`): Health AI Developer Foundations terms.
 - **TorchXRayVision** classifiers as independent checks of the edits.

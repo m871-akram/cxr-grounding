@@ -1,7 +1,13 @@
-"""Stage 1: data.
+"""Stage 1: data. All three commands are run by slurm/data.sbatch.
 
+    python -m cxr.data chexmask --src ChestX-Ray8.csv        # compact CheXmask file (landmarks only)
     python -m cxr.data ctr                                   # CTR per image, summary + first figure
-    python -m cxr.data prepare --nih-zip data/raw/data.zip   # 512-px NIH subset -> data/nih512
+    python -m cxr.data prepare --nih-zip images_001.zip --csv data/Data_Entry_2017.csv
+                                                             # 512-px NIH subset -> data/nih512
+
+chexmask: keeps the columns this project uses from the 2.2 GB CheXmask file for NIH (image,
+mask quality, landmarks, image size): ~115 MB. The heart and lung masks are these landmark
+contours, filled, so they can be redrawn at any resolution when needed.
 
 ctr: cardiothoracic ratio (CTR = heart width / chest width) of every NIH image, measured on the
 CheXmask landmarks (heart and lung contours). Writes one row per image to outputs/ctr_nih.csv,
@@ -9,8 +15,8 @@ then results/ctr_summary.csv and results/ctr_by_view.png: CTR of cardiomegaly vs
 films, on PA and AP views. This checks the physiology behind the project: the CTR rule should
 separate the two groups on PA films, and less so on AP films (the heart looks bigger on AP).
 
-prepare: NIH ChestX-ray14 from the Kaggle zip (read without unzipping) or an extracted folder.
-Keeps PA views with Cardiomegaly, Effusion or Pneumothorax plus 8,000 "No Finding" images,
+prepare: NIH ChestX-ray14 images from a zip (read without unzipping) or an extracted folder. Works
+on whatever part of the dataset it is given, so the 12 image zips can be fed one at a time. Keeps PA views with Cardiomegaly, Effusion or Pneumothorax plus 8,000 "No Finding" images,
 padded to square and resized to 512 px, split 80/10/10 by patient (a patient never appears in
 two splits). Images already converted are skipped, so an interrupted run can simply be restarted.
 """
@@ -174,6 +180,20 @@ def plot_ctr(df: pd.DataFrame, summary: pd.DataFrame, path: Path, min_rca: float
     plt.close(fig)
 
 
+CHEXMASK_COLUMNS = ["Image Index", "Dice RCA (Mean)", "Landmarks", "Height", "Width"]
+
+
+def chexmask(args: argparse.Namespace) -> None:
+    tmp = args.out.with_suffix(".tmp")
+    tmp.parent.mkdir(parents=True, exist_ok=True)
+    n = 0
+    for i, chunk in enumerate(pd.read_csv(args.src, usecols=CHEXMASK_COLUMNS, chunksize=20_000)):
+        chunk[CHEXMASK_COLUMNS].to_csv(tmp, mode="w" if i == 0 else "a", header=i == 0, index=False)
+        n += len(chunk)
+    tmp.replace(args.out)  # atomic: a killed job never leaves a half-written file
+    print(f"{n:,} rows -> {args.out} ({args.out.stat().st_size / 1e6:.0f} MB)")
+
+
 def ctr(args: argparse.Namespace) -> None:
     parts = []
     for chunk in pd.read_csv(args.chexmask, usecols=["Image Index", "Dice RCA (Mean)", "Landmarks"],
@@ -313,6 +333,8 @@ def prepare(args: argparse.Namespace) -> None:
           "| no finding:", int(avail["no_finding"].sum()))
     if errors:
         print(f"{len(errors)} errors, first ones:", *errors[:5], sep="\n  ")
+        # Fail loudly (e.g. disk quota): the job then stops before marking this zip as done.
+        raise SystemExit(f"{len(errors)} images failed; run again to retry them.")
 
 
 # ---------------------------------------------------------------- command line
@@ -321,9 +343,14 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="command", required=True)
 
+    m = sub.add_parser("chexmask", help="Compact CheXmask file: landmarks and mask quality only")
+    m.add_argument("--src", type=Path, required=True, help="CheXmask OriginalResolution/ChestX-Ray8.csv")
+    m.add_argument("--out", type=Path, default=DATA / "chexmask_nih_landmarks.csv")
+    m.set_defaults(func=chexmask)
+
     c = sub.add_parser("ctr", help="CTR per image from CheXmask, summary table and figure")
-    c.add_argument("--chexmask", type=Path, default=DATA / "chexmask_nih.csv",
-                   help="CheXmask OriginalResolution/ChestX-Ray8.csv")
+    c.add_argument("--chexmask", type=Path, default=DATA / "chexmask_nih_landmarks.csv",
+                   help="Output of the chexmask command (or the original CheXmask CSV)")
     c.add_argument("--labels", type=Path, default=DATA / "Data_Entry_2017.csv", help="NIH labels CSV")
     c.add_argument("--min-rca", type=float, default=0.7,
                    help="Keep masks with Dice RCA (Mean) >= this (CheXmask authors' advice: 0.7)")
@@ -333,7 +360,7 @@ def main() -> None:
 
     p = sub.add_parser("prepare", help="512-px NIH subset with a patient-level split")
     src = p.add_mutually_exclusive_group(required=True)
-    src.add_argument("--nih-zip", type=Path, help="The Kaggle zip (nih-chest-xrays/data), read without extracting")
+    src.add_argument("--nih-zip", type=Path, help="A zip with NIH PNGs (any part of the dataset), read without extracting")
     src.add_argument("--nih-dir", type=Path, help="Folder with Data_Entry_2017*.csv and the PNG images")
     p.add_argument("--out-dir", type=Path, default=DATA / "nih512")
     p.add_argument("--csv", type=Path, default=None, help="Labels CSV (default: found in the zip/folder)")

@@ -1,0 +1,5 @@
+view,group,images,patients,ctr_median,ctr_q25,ctr_q75,pct_ctr_above_0.5,auroc_vs_no_finding
+PA,Cardiomegaly,1557,1145,0.546,0.52,0.578,88.375,0.914
+PA,No finding,39205,22407,0.454,0.424,0.488,18.635,
+AP,Cardiomegaly,1174,581,0.562,0.531,0.598,91.738,0.795
+AP,No finding,20519,6991,0.503,0.467,0.54,51.888,
