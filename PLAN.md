@@ -38,7 +38,7 @@ changed. That is the cleanest causal test, and generative editing makes it possi
 | What | Metric |
 |---|---|
 | Edit validity | % of edits passing the three checks; verifier Δp; CTR shift; SSIM/LPIPS outside mask |
-| Edit realism (stretch) | Blinded reader test: 2-3 physicians label 50 real + 50 edited images |
+| Edit realism | Blinded pilot reader study: 3 medical readers rate 50 real + 50 edited images |
 | VLM accuracy | AUROC of P(yes) on original images |
 | Grounding | **Flip rate**: % of valid pairs where the answer changes the right way |
 | Artifact control | **Sham edits**: same mask, prompt that keeps the finding; answer should not change |
@@ -51,26 +51,21 @@ All numbers with 95% bootstrap confidence intervals, resampling by patient.
 
 Must-have scope: **cardiomegaly + pleural effusion**. Pneumothorax is a stretch goal.
 
-### Week 0 (this week): setup and access
-- [ ] Run `scripts/check_cluster.sh` on nash, then inside a job (see README). Note quota,
-      partitions, time limits, internet access from compute nodes.
-- [ ] Email support.info@ensimag.fr: storage space for ~40 GB, how to reserve a full GPU for
-      long jobs, max job duration.
-- [ ] Request access on Hugging Face: `microsoft/radedit`, `google/medgemma-4b-it`.
-- [ ] Kaggle account + API token (NIH download). Optional: W&B account.
-- [ ] Create env (`setup/create_env.sh`), run the GPU smoke test.
-- [ ] Write the 1-page spec: question, data, metrics, success criteria (template in section 7).
+### Week 0: setup and access
+- [x] Cluster checked (see the lab notebook, section 10).
+- [x] Kaggle API token; Python environment (`slurm/setup_env.sh`); GPU smoke test.
+- [ ] Hugging Face: accept the terms on `microsoft/radedit` and `google/medgemma-4b-it`.
+- [ ] Write the 1-page spec: question, data, metrics, success criteria (template in section 8).
 
-### Week 1: data and exploration
-- [ ] Download NIH through node-local /tmp inside a job; keep only the 512-px subset
-      (`scripts/prepare_nih_subset.py`), split by patient.
-- [ ] Exploration notebook, only the checks that matter here:
-      label prevalence; AP vs PA (heart looks bigger on AP, so the CTR rule only holds on PA);
-      several images per patient; NLP-extracted labels are noisy; age/sex for subgroups.
-- [ ] CheXmask masks for the subset (keep masks with RCA Dice mean >= 0.7). Compute CTR from
-      masks and plot CTR for "Cardiomegaly" vs "No Finding". **First figure** and a sanity
-      check of the whole physiology logic.
-- [ ] Download VQA-RAD and SLAKE (Hugging Face) for the later regression check.
+### Week 1: data and physiology check
+- [ ] `sbatch slurm/data.sbatch`: labels, CheXmask, CTR figure, then the 512-px subset
+      (18,360 PA films: every cardiomegaly / effusion / pneumothorax film + 8,000 normal ones,
+      split by patient).
+- [ ] Read `results/ctr_by_view.png`: does the 0.5 rule separate cardiomegaly from normal films
+      on PA, and not on AP? Write the numbers and 3 lines of interpretation in the lab notebook.
+- [ ] Metadata checks that matter later: images per patient, age/sex (subgroups), label noise
+      (NIH labels are mined from reports).
+- [ ] 30-min design call with the clinical readers (section 6).
 
 ### Week 2: counterfactual engine
 - [ ] Run RadEdit on 20 images by hand; tune prompts, mask dilation, guidance, steps.
@@ -82,17 +77,20 @@ Must-have scope: **cardiomegaly + pleural effusion**. Pneumothorax is a stretch 
 ### Week 3: the audit (first CV-ready result)
 - [ ] MedGemma on the A40: P(yes) on originals, edited, sham, blank, shuffled, other-patient.
 - [ ] Results table with bootstrap CIs. Short write-up + one LinkedIn post with the figure.
+- [ ] Blinded pilot reader study (section 6): 50 real + 50 edited images, rating page on phone.
 - [ ] Add the project to the CV ("in progress", with the audit numbers).
 
 ### Week 4: the fix
+- [ ] Download VQA-RAD and SLAKE (Hugging Face).
 - [ ] LoRA (bf16, A40) on training pairs, split by patient; mix in VQA-RAD/SLAKE training
       samples to avoid forgetting.
 - [ ] Evaluate: flip rate on held-out patients, sham-edit rate, VQA-RAD/SLAKE accuracy.
+- [ ] Failure-case review with the clinical readers (~20 pairs where MedGemma ignored the edit).
 
 ### Week 5: robustness and analysis
 - [ ] Leave-one-finding-out: train on effusion pairs, test on cardiomegaly pairs.
 - [ ] Minimal edits vs retrieved hard negatives (CORAL's approach) as training data.
-- [ ] Stretch: pneumothorax; second VLM; CheXpert as second dataset; reader test;
+- [ ] Stretch: pneumothorax; second VLM; CheXpert as second dataset;
       one figure comparing attention maps with counterfactual results.
 
 ### Week 6: packaging
@@ -104,28 +102,57 @@ Must-have scope: **cardiomegaly + pleural effusion**. Pneumothorax is a stretch 
 
 | Step | Where | Notes |
 |---|---|---|
-| Code, notebooks on tiny samples, writing | Mac (Claude Code) | No big models locally |
-| Data prep, RadEdit, U-Net | RTX 6000 (24 GB) | Turing: fp16 mixed precision, no bf16 |
-| MedGemma audit + LoRA | A40 (48 GB) | Gemma is unstable in fp16; bf16 needs Ampere |
+| Code review, small tests, figures, writing | Mac | No big models locally |
+| Data prep, RadEdit, U-Net | RTX 6000 (24 GB) | Turing: fp16 autocast + GradScaler (90 vs 13 TFLOPS in fp32) |
+| MedGemma audit + LoRA | A40 (48 GB) | bf16 (118 TFLOPS); Gemma is unstable in fp16 |
 
 Fallback if the A40 queue is long: MedGemma in fp32 on an RTX 6000 (4B params ≈ 16 GB).
 
-Storage (steady state, approximate): Python env 6-8 GB, NIH 512-px subset ~5 GB, model weights
-~15 GB, CheXmask CSV for NIH a few GB, outputs ~5 GB. Total ~35-40 GB. Raw NIH (~45 GB) only
-passes through node-local /tmp. Google Drive holds the archive: subset tarball, final
-checkpoints, results.
+Code moves Mac → GitHub → cluster (`git pull`); results come back the same way (small files in
+`results/` are committed from the cluster). Every partition stops jobs after 4 h, so every long
+job (U-Net, batch generation, audit, LoRA) saves checkpoints or partial results and resumes
+when resubmitted.
 
-## 6. Risks
+Storage (steady state, approximate): Python env 6-8 GB, NIH 512-px subset ~3-4 GB, model weights
+~15 GB, CheXmask CSV for NIH 2.2 GB, outputs ~5 GB. Total ~35 GB. The raw NIH zip (~45 GB) sits
+in `data/raw` only until the subset is built (node `/tmp` has ~35 GB free, too small).
+Google Drive is the archive (subset tarball, final checkpoints, results), never a training source:
+install the `rclone` binary in `~/bin`, run `rclone config` (Google Drive, answer "n" to auto
+config), run `rclone authorize "drive"` on the Mac and paste the token back; then
+`rclone copy <file> gdrive:cxr-grounding/`.
+
+## 6. Clinical input
+
+Readers: a urologist, an ENT specialist and a 7th-year medical student. None of them reads chest
+X-rays every day, so the reader study is a pilot; one radiology resident would make it much
+stronger.
+
+What they do, on public images only:
+- **Design review (week 1).** Are the yes/no questions phrased the way a clinician would ask?
+  The CTR > 0.5 rule on PA films and when it fails (AP view, poor inspiration, rotation).
+- **Blinded pilot reader study (week 3).** 50 real + 50 edited images, shuffled. For each:
+  "real or edited?" and "is the finding present?". Reports realism (can readers tell edits
+  apart?), agreement with the intended edit, and inter-reader agreement (Fleiss' kappa).
+- **Failure-case review (week 4).** ~20 pairs where MedGemma ignored the edit: unclear edit,
+  borderline case, or real model error?
+
+Rules:
+- No patient data from their practice, and no use of the models on patients (RadEdit is
+  research-only; MedGemma's outputs are not meant to inform diagnosis or patient management).
+- Report their exact roles; name them only with their permission.
+- Wording: "pilot reader study", "clinician-reviewed". Never "clinically tested" or "validated".
+
+## 7. Risks
 
 | Risk | Plan B |
 |---|---|
 | RadEdit edits unconvincing for a finding | Drop that finding; cardiomegaly + effusion are enough |
 | Gated access slow | Start with data prep and the U-Net; they need no access |
-| Home quota too small | Project space from support; otherwise /tmp staging + Drive archive |
-| Compute nodes have no internet | Download on nash, or via Google Drive + rclone |
+| 4 h job limit | Checkpoint and resume; chain jobs with `sbatch --dependency=afterany:<id>` |
+| Readers are not radiologists | Report as a pilot; try to add a radiology resident |
 | Fine-tuning does not help | The audit alone (weeks 1-3) is a complete result |
 
-## 7. One-page spec template
+## 8. One-page spec template
 
 - **Question** (one sentence)
 - **Data** (dataset, views, findings, split rule)
@@ -134,12 +161,22 @@ checkpoints, results.
 - **Success criteria** (e.g., >= 300 valid pairs per finding; CI width < 10 points)
 - **Out of scope** (clinical use, DICOM, 3D, reports)
 
-## 8. References
+## 9. References
 
+- NIH ChestX-ray14: Wang et al., CVPR 2017
+- CheXmask (Scientific Data 2024): arXiv 2307.03293
 - RadEdit (ECCV 2024): arXiv 2312.12865, weights: huggingface.co/microsoft/radedit
 - MedGemma technical report: arXiv 2507.05201
 - CORAL, "Do Medical VLMs Actually See?": arXiv 2607.03647
 - "VLMs for chest radiography do not always need the image": arXiv 2606.17710
 - HalluCXR: arXiv 2605.20469; ProbMed ("Worse than Random?"): arXiv 2405.20421
-- CheXmask (Scientific Data 2024): arXiv 2307.03293
 - DeGrave et al., auditing classifiers with generative AI (Nature BME 2023)
+
+## 10. Lab notebook
+
+**2026-09-28, cluster.** Partitions `rtx6000` (default; 3 Quadro RTX 6000 per node), `a40`
+(one node, 3 A40), `v100`; 4 h limit everywhere. A full GPU (`--gres=gpu:1`) is accepted; a
+shard is 1/6 of a GPU and shares its memory. Compute nodes reach Hugging Face, Kaggle, PhysioNet
+and PyPI. Home is on the file server (3.4 TB free, no quota shown); node `/tmp` ~35 GB free.
+Smoke test (torch 2.6, CUDA 12.4): RTX 6000 13 TFLOPS fp32 / 90 fp16; A40 24 fp32 / 114 fp16 /
+118 bf16.

@@ -1,0 +1,1227 @@
+diff --git a/.gitignore b/.gitignore
+index 504e9c1..af8a9b4 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1,10 +1,11 @@
++# Cluster-only folders (see README): datasets, big working files, Slurm logs, environment
+ .venv/
+ .cache/
+ data/
+ outputs/
+-logs/*.out
+-logs/*.txt
++logs/
+ wandb/
++# Model weights never go to git
+ *.pt
+ *.pth
+ *.ckpt
+diff --git a/PLAN.md b/PLAN.md
+index 155e3a4..3cc918a 100644
+--- a/PLAN.md
++++ b/PLAN.md
+@@ -38,7 +38,7 @@ changed. That is the cleanest causal test, and generative editing makes it possi
+ | What | Metric |
+ |---|---|
+ | Edit validity | % of edits passing the three checks; verifier Δp; CTR shift; SSIM/LPIPS outside mask |
+-| Edit realism (stretch) | Blinded reader test: 2-3 physicians label 50 real + 50 edited images |
++| Edit realism | Blinded pilot reader study: 3 medical readers rate 50 real + 50 edited images |
+ | VLM accuracy | AUROC of P(yes) on original images |
+ | Grounding | **Flip rate**: % of valid pairs where the answer changes the right way |
+ | Artifact control | **Sham edits**: same mask, prompt that keeps the finding; answer should not change |
+@@ -51,26 +51,21 @@ All numbers with 95% bootstrap confidence intervals, resampling by patient.
+ 
+ Must-have scope: **cardiomegaly + pleural effusion**. Pneumothorax is a stretch goal.
+ 
+-### Week 0 (this week): setup and access
+-- [ ] Run `scripts/check_cluster.sh` on nash, then inside a job (see README). Note quota,
+-      partitions, time limits, internet access from compute nodes.
+-- [ ] Email support.info@ensimag.fr: storage space for ~40 GB, how to reserve a full GPU for
+-      long jobs, max job duration.
+-- [ ] Request access on Hugging Face: `microsoft/radedit`, `google/medgemma-4b-it`.
+-- [ ] Kaggle account + API token (NIH download). Optional: W&B account.
+-- [ ] Create env (`setup/create_env.sh`), run the GPU smoke test.
+-- [ ] Write the 1-page spec: question, data, metrics, success criteria (template in section 7).
+-
+-### Week 1: data and exploration
+-- [ ] Download NIH through node-local /tmp inside a job; keep only the 512-px subset
+-      (`scripts/prepare_nih_subset.py`), split by patient.
+-- [ ] Exploration notebook, only the checks that matter here:
+-      label prevalence; AP vs PA (heart looks bigger on AP, so the CTR rule only holds on PA);
+-      several images per patient; NLP-extracted labels are noisy; age/sex for subgroups.
+-- [ ] CheXmask masks for the subset (keep masks with RCA Dice mean >= 0.7). Compute CTR from
+-      masks and plot CTR for "Cardiomegaly" vs "No Finding". **First figure** and a sanity
+-      check of the whole physiology logic.
+-- [ ] Download VQA-RAD and SLAKE (Hugging Face) for the later regression check.
++### Week 0: setup and access
++- [x] Cluster checked (see the lab notebook, section 10).
++- [x] Kaggle API token; Python environment (`slurm/setup_env.sh`); GPU smoke test.
++- [ ] Hugging Face: accept the terms on `microsoft/radedit` and `google/medgemma-4b-it`.
++- [ ] Write the 1-page spec: question, data, metrics, success criteria (template in section 8).
++
++### Week 1: data and physiology check
++- [ ] `sbatch slurm/data.sbatch`: labels, CheXmask, CTR figure, then the 512-px subset
++      (18,360 PA films: every cardiomegaly / effusion / pneumothorax film + 8,000 normal ones,
++      split by patient).
++- [ ] Read `results/ctr_by_view.png`: does the 0.5 rule separate cardiomegaly from normal films
++      on PA, and not on AP? Write the numbers and 3 lines of interpretation in the lab notebook.
++- [ ] Metadata checks that matter later: images per patient, age/sex (subgroups), label noise
++      (NIH labels are mined from reports).
++- [ ] 30-min design call with the clinical readers (section 6).
+ 
+ ### Week 2: counterfactual engine
+ - [ ] Run RadEdit on 20 images by hand; tune prompts, mask dilation, guidance, steps.
+@@ -82,17 +77,20 @@ Must-have scope: **cardiomegaly + pleural effusion**. Pneumothorax is a stretch
+ ### Week 3: the audit (first CV-ready result)
+ - [ ] MedGemma on the A40: P(yes) on originals, edited, sham, blank, shuffled, other-patient.
+ - [ ] Results table with bootstrap CIs. Short write-up + one LinkedIn post with the figure.
++- [ ] Blinded pilot reader study (section 6): 50 real + 50 edited images, rating page on phone.
+ - [ ] Add the project to the CV ("in progress", with the audit numbers).
+ 
+ ### Week 4: the fix
++- [ ] Download VQA-RAD and SLAKE (Hugging Face).
+ - [ ] LoRA (bf16, A40) on training pairs, split by patient; mix in VQA-RAD/SLAKE training
+       samples to avoid forgetting.
+ - [ ] Evaluate: flip rate on held-out patients, sham-edit rate, VQA-RAD/SLAKE accuracy.
++- [ ] Failure-case review with the clinical readers (~20 pairs where MedGemma ignored the edit).
+ 
+ ### Week 5: robustness and analysis
+ - [ ] Leave-one-finding-out: train on effusion pairs, test on cardiomegaly pairs.
+ - [ ] Minimal edits vs retrieved hard negatives (CORAL's approach) as training data.
+-- [ ] Stretch: pneumothorax; second VLM; CheXpert as second dataset; reader test;
++- [ ] Stretch: pneumothorax; second VLM; CheXpert as second dataset;
+       one figure comparing attention maps with counterfactual results.
+ 
+ ### Week 6: packaging
+@@ -104,28 +102,57 @@ Must-have scope: **cardiomegaly + pleural effusion**. Pneumothorax is a stretch
+ 
+ | Step | Where | Notes |
+ |---|---|---|
+-| Code, notebooks on tiny samples, writing | Mac (Claude Code) | No big models locally |
+-| Data prep, RadEdit, U-Net | RTX 6000 (24 GB) | Turing: fp16 mixed precision, no bf16 |
+-| MedGemma audit + LoRA | A40 (48 GB) | Gemma is unstable in fp16; bf16 needs Ampere |
++| Code review, small tests, figures, writing | Mac | No big models locally |
++| Data prep, RadEdit, U-Net | RTX 6000 (24 GB) | Turing: fp16 autocast + GradScaler (90 vs 13 TFLOPS in fp32) |
++| MedGemma audit + LoRA | A40 (48 GB) | bf16 (118 TFLOPS); Gemma is unstable in fp16 |
+ 
+ Fallback if the A40 queue is long: MedGemma in fp32 on an RTX 6000 (4B params ≈ 16 GB).
+ 
+-Storage (steady state, approximate): Python env 6-8 GB, NIH 512-px subset ~5 GB, model weights
+-~15 GB, CheXmask CSV for NIH a few GB, outputs ~5 GB. Total ~35-40 GB. Raw NIH (~45 GB) only
+-passes through node-local /tmp. Google Drive holds the archive: subset tarball, final
+-checkpoints, results.
+-
+-## 6. Risks
++Code moves Mac → GitHub → cluster (`git pull`); results come back the same way (small files in
++`results/` are committed from the cluster). Every partition stops jobs after 4 h, so every long
++job (U-Net, batch generation, audit, LoRA) saves checkpoints or partial results and resumes
++when resubmitted.
++
++Storage (steady state, approximate): Python env 6-8 GB, NIH 512-px subset ~3-4 GB, model weights
++~15 GB, CheXmask CSV for NIH 2.2 GB, outputs ~5 GB. Total ~35 GB. The raw NIH zip (~45 GB) sits
++in `data/raw` only until the subset is built (node `/tmp` has ~35 GB free, too small).
++Google Drive is the archive (subset tarball, final checkpoints, results), never a training source:
++install the `rclone` binary in `~/bin`, run `rclone config` (Google Drive, answer "n" to auto
++config), run `rclone authorize "drive"` on the Mac and paste the token back; then
++`rclone copy <file> gdrive:cxr-grounding/`.
++
++## 6. Clinical input
++
++Readers: a urologist, an ENT specialist and a 7th-year medical student. None of them reads chest
++X-rays every day, so the reader study is a pilot; one radiology resident would make it much
++stronger.
++
++What they do, on public images only:
++- **Design review (week 1).** Are the yes/no questions phrased the way a clinician would ask?
++  The CTR > 0.5 rule on PA films and when it fails (AP view, poor inspiration, rotation).
++- **Blinded pilot reader study (week 3).** 50 real + 50 edited images, shuffled. For each:
++  "real or edited?" and "is the finding present?". Reports realism (can readers tell edits
++  apart?), agreement with the intended edit, and inter-reader agreement (Fleiss' kappa).
++- **Failure-case review (week 4).** ~20 pairs where MedGemma ignored the edit: unclear edit,
++  borderline case, or real model error?
++
++Rules:
++- No patient data from their practice, and no use of the models on patients (RadEdit is
++  research-only; MedGemma's outputs are not meant to inform diagnosis or patient management).
++- Report their exact roles; name them only with their permission.
++- Wording: "pilot reader study", "clinician-reviewed". Never "clinically tested" or "validated".
++
++## 7. Risks
+ 
+ | Risk | Plan B |
+ |---|---|
+ | RadEdit edits unconvincing for a finding | Drop that finding; cardiomegaly + effusion are enough |
+ | Gated access slow | Start with data prep and the U-Net; they need no access |
+-| Home quota too small | Project space from support; otherwise /tmp staging + Drive archive |
+-| Compute nodes have no internet | Download on nash, or via Google Drive + rclone |
++| 4 h job limit | Checkpoint and resume; chain jobs with `sbatch --dependency=afterany:<id>` |
++| Readers are not radiologists | Report as a pilot; try to add a radiology resident |
+ | Fine-tuning does not help | The audit alone (weeks 1-3) is a complete result |
+ 
+-## 7. One-page spec template
++## 8. One-page spec template
+ 
+ - **Question** (one sentence)
+ - **Data** (dataset, views, findings, split rule)
+@@ -134,12 +161,22 @@ checkpoints, results.
+ - **Success criteria** (e.g., >= 300 valid pairs per finding; CI width < 10 points)
+ - **Out of scope** (clinical use, DICOM, 3D, reports)
+ 
+-## 8. References
++## 9. References
+ 
++- NIH ChestX-ray14: Wang et al., CVPR 2017
++- CheXmask (Scientific Data 2024): arXiv 2307.03293
+ - RadEdit (ECCV 2024): arXiv 2312.12865, weights: huggingface.co/microsoft/radedit
+ - MedGemma technical report: arXiv 2507.05201
+ - CORAL, "Do Medical VLMs Actually See?": arXiv 2607.03647
+ - "VLMs for chest radiography do not always need the image": arXiv 2606.17710
+ - HalluCXR: arXiv 2605.20469; ProbMed ("Worse than Random?"): arXiv 2405.20421
+-- CheXmask (Scientific Data 2024): arXiv 2307.03293
+ - DeGrave et al., auditing classifiers with generative AI (Nature BME 2023)
++
++## 10. Lab notebook
++
++**2026-09-28, cluster.** Partitions `rtx6000` (default; 3 Quadro RTX 6000 per node), `a40`
++(one node, 3 A40), `v100`; 4 h limit everywhere. A full GPU (`--gres=gpu:1`) is accepted; a
++shard is 1/6 of a GPU and shares its memory. Compute nodes reach Hugging Face, Kaggle, PhysioNet
++and PyPI. Home is on the file server (3.4 TB free, no quota shown); node `/tmp` ~35 GB free.
++Smoke test (torch 2.6, CUDA 12.4): RTX 6000 13 TFLOPS fp32 / 90 fp16; A40 24 fp32 / 114 fp16 /
++118 bf16.
+diff --git a/README.md b/README.md
+index c70bf2c..6106bdf 100644
+--- a/README.md
++++ b/README.md
+@@ -1,92 +1,62 @@
+ # cxr-grounding
+ 
+ Do medical vision-language models actually look at the X-ray? This project edits chest X-rays with
+-a diffusion model (remove or add one finding, nothing else), checks the edits with anatomy
+-(cardiothoracic ratio from a segmentation network), then tests whether MedGemma's answers follow
++a diffusion model (remove or add one finding, nothing else), checks each edit with anatomy
++(cardiothoracic ratio from a segmentation network), then tests whether MedGemma's answer follows
+ the image. Finally it fine-tunes MedGemma with LoRA on the edited pairs.
+ 
+-The full plan is in [PLAN.md](PLAN.md).
++> Research project on public data. Not for clinical use.
+ 
+-> Research project, not for clinical use.
++Plan, metrics and progress: [PLAN.md](PLAN.md).
++
++## Results
++
++| Week | Result | Files |
++|---|---|---|
++| 1 | Physiology check: cardiothoracic ratio of cardiomegaly vs normal films, PA vs AP views | `results/ctr_by_view.png`, `results/ctr_summary.csv` |
+ 
+ ## Layout
+ 
+ ```
+-PLAN.md                     week-by-week plan, metrics, risks
+-requirements.txt            Python dependencies (install PyTorch first, see below)
+-setup/create_env.sh         creates .venv on the cluster
+-scripts/check_cluster.sh    quota, partitions, GPU, internet access
+-scripts/smoke_test.py       GPU test (fp32/fp16/bf16 speed)
+-scripts/prepare_nih_subset.py   NIH ChestX-ray14 -> 512 px subset + metadata, split by patient
+-slurm/job.sbatch            GPU job template: sbatch slurm/job.sbatch <script.py> [args]
+-slurm/download_nih.sbatch   CPU job: Kaggle download to /tmp -> data/nih512
+-logs/                       Slurm logs
+-data/ outputs/ .cache/      not tracked by git
++cxr/                all the Python, one file per stage, run as: python -m cxr.<stage>
++  __init__.py       shared paths
++  data.py           1. NIH subset, CheXmask masks, cardiothoracic ratio (CTR)
++  seg.py            2. heart/lung U-Net                                   (week 2)
++  edit.py           2. RadEdit counterfactual pairs + validation checks   (week 2)
++  audit.py          3. MedGemma P(yes), flip rate, controls               (week 3)
++  lora.py           4. LoRA fine-tuning + re-evaluation                   (week 4)
++slurm/
++  setup_env.sh      creates .venv (once, on the cluster login node)
++  data.sbatch       stage 1 in one job: downloads, CTR + figure, NIH subset
++  job.sbatch        any GPU run: sbatch slurm/job.sbatch -m cxr.<stage> [options]
++results/            small tables and figures (in git)
++PLAN.md             plan and lab notebook
+ ```
+ 
+-## Quick start on Ensicompute
++Only on the cluster, not in git: `data/` (datasets), `outputs/` (per-image tables, checkpoints,
++generated images), `logs/` (Slurm logs), `.venv/`.
+ 
+-On your Mac:
++## Run it (Slurm cluster)
+ 
+ ```bash
+-git init -b main && git add . && git commit -m "Starter"
+-# create an empty private repo on GitHub, then:
+-git remote add origin git@github.com:m871-akram/cxr-grounding.git && git push -u origin main
+-```
+-
+-On nash (VPN if off campus). To clone a private repo from nash, add an SSH key generated on nash
+-to your GitHub account (`ssh-keygen -t ed25519`, then paste `~/.ssh/id_ed25519.pub` in GitHub settings).
+-
+-```bash
+-git clone git@github.com:m871-akram/cxr-grounding.git ~/cxr-grounding   # or another folder with space
+-cd ~/cxr-grounding
+-
+-# 1. What do I have? (quota, partitions, internet)
+-bash scripts/check_cluster.sh | tee logs/check_nash.txt
+-srun --gres=shard:1 --cpus-per-task=2 --mem=4GB bash scripts/check_cluster.sh | tee logs/check_node.txt
+-
+-# 2. Environment (once)
+-bash setup/create_env.sh
+-
+-# 3. GPU smoke test (edit the partition name in slurm/job.sbatch first: see `sinfo`)
+-sbatch slurm/job.sbatch scripts/smoke_test.py
+-squeue -u $USER          # then read logs/cxr-<jobid>.out
++git clone git@github.com:m871-akram/cxr-grounding.git ~/cxr-grounding && cd ~/cxr-grounding
++bash slurm/setup_env.sh                        # once: Python environment
++source .venv/bin/activate && hf auth login     # once: gated models (RadEdit, MedGemma)
++sbatch slurm/data.sbatch                       # stage 1: data, CTR figure, 512-px subset
+ ```
+ 
+-If the project lives outside `~/cxr-grounding`, set `export PROJECT_DIR=/path/to/cxr-grounding`
+-before running the scripts.
+-
+-## Data
+-
+-- **NIH ChestX-ray14** (Kaggle `nih-chest-xrays/data`, ~45 GB). `sbatch slurm/download_nih.sbatch`
+-  downloads it into the node's `/tmp`, reads the zip directly (no unzip) and keeps only the 512-px
+-  subset (~5 GB) in `data/nih512`. Needs a Kaggle API token in `~/.kaggle/kaggle.json`.
+-- **CheXmask** heart/lung masks: PhysioNet `chexmask-cxr-segmentation-data` (open access); only the
+-  ChestX-ray8 file is needed.
+-- **VQA-RAD** and **SLAKE** (Hugging Face) for the regression check after fine-tuning.
+-
+-## Where things live
+-
+-| Place | Role |
+-|---|---|
+-| Mac (Claude Code) | Write code, small tests on a few images, figures, writing. Push to GitHub. |
+-| GitHub (private repo) | The only way code moves between the Mac and the cluster. |
+-| Ensicompute | Data, model weights and every GPU job. Pull the repo, submit with `sbatch`. |
+-| Google Drive (2 TB) | Archive only: the processed subset as one tarball, final checkpoints, results. Never train from it. |
+-
+-For interactive debugging (notebooks on a GPU), use VS Code Remote-SSH to a `vmgpuXXX.ensimag.fr`
+-machine, as described in the Ensicompute guide. Long runs go through `sbatch`.
+-
+-Google Drive from the cluster, if it has internet access: install the `rclone` binary in `~/bin`,
+-run `rclone config` (choose Google Drive, answer "n" to auto config), then run
+-`rclone authorize "drive"` on the Mac and paste the token back. Afterwards:
+-`rclone copy data/nih512.tar gdrive:cxr-grounding/`.
+-
+-## Models
+-
+-- `microsoft/radedit`: gated, research use only. Do not redistribute the weights.
+-- `google/medgemma-4b-it`: gated (accept the terms on Hugging Face).
+-- TorchXRayVision classifiers as independent verifiers of the edits.
+-
+-On the cluster, log in once inside the venv so the gated downloads work: `hf auth login`
+-(older versions: `huggingface-cli login`), with a read token from your Hugging Face settings.
++Every partition stops jobs after 4 h: long stages save checkpoints and resume when resubmitted.
++If the project is not in `~/cxr-grounding`, set `export PROJECT_DIR=/path/to/cxr-grounding` first.
++
++## Data and models
++
++- **NIH ChestX-ray14** (Wang et al., CVPR 2017), from Kaggle `nih-chest-xrays/data` (needs a
++  Kaggle API token in `~/.kaggle/kaggle.json`). PA views only for the edits: the CTR rule does not
++  hold on AP films.
++- **CheXmask** v1.0 (Gaggion et al., Scientific Data 2024; PhysioNet, CC BY 4.0): heart and lung
++  contours for every NIH image. The job downloads the NIH file from a Hugging Face mirror and checks
++  it against PhysioNet's official SHA-256.
++- **RadEdit** (`microsoft/radedit`): research use only; weights are not redistributed.
++- **MedGemma** (`google/medgemma-4b-it`): Health AI Developer Foundations terms.
++- **TorchXRayVision** classifiers as independent checks of the edits.
++- **VQA-RAD** and **SLAKE** (Hugging Face) to check that fine-tuning does not hurt general answers.
+diff --git a/cxr/__init__.py b/cxr/__init__.py
+new file mode 100644
+index 0000000..e767fcc
+--- /dev/null
++++ b/cxr/__init__.py
+@@ -0,0 +1,10 @@
++"""Do medical VLMs look at the X-ray? Counterfactual chest X-rays to test and fix MedGemma.
++
++One module per stage, each run from the project folder as `python -m cxr.<stage>`.
++"""
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parent.parent
++DATA = ROOT / "data"          # datasets (cluster only, not in git)
++OUTPUTS = ROOT / "outputs"    # big working files: per-image tables, checkpoints (not in git)
++RESULTS = ROOT / "results"    # small tables and figures shown in the README (in git)
+diff --git a/cxr/data.py b/cxr/data.py
+new file mode 100644
+index 0000000..09abe66
+--- /dev/null
++++ b/cxr/data.py
+@@ -0,0 +1,355 @@
++"""Stage 1: data.
++
++    python -m cxr.data ctr                                   # CTR per image, summary + first figure
++    python -m cxr.data prepare --nih-zip data/raw/data.zip   # 512-px NIH subset -> data/nih512
++
++ctr: cardiothoracic ratio (CTR = heart width / chest width) of every NIH image, measured on the
++CheXmask landmarks (heart and lung contours). Writes one row per image to outputs/ctr_nih.csv,
++then results/ctr_summary.csv and results/ctr_by_view.png: CTR of cardiomegaly vs "No Finding"
++films, on PA and AP views. This checks the physiology behind the project: the CTR rule should
++separate the two groups on PA films, and less so on AP films (the heart looks bigger on AP).
++
++prepare: NIH ChestX-ray14 from the Kaggle zip (read without unzipping) or an extracted folder.
++Keeps PA views with Cardiomegaly, Effusion or Pneumothorax plus 8,000 "No Finding" images,
++padded to square and resized to 512 px, split 80/10/10 by patient (a patient never appears in
++two splits). Images already converted are skipped, so an interrupted run can simply be restarted.
++"""
++from __future__ import annotations
++
++import argparse
++import hashlib
++import io
++import os
++import zipfile
++from concurrent.futures import ProcessPoolExecutor
++from pathlib import Path
++
++import numpy as np
++import pandas as pd
++from PIL import Image
++
++from . import DATA, OUTPUTS, RESULTS
++
++ALL_FINDINGS = [
++    "Atelectasis", "Cardiomegaly", "Consolidation", "Edema", "Effusion", "Emphysema",
++    "Fibrosis", "Hernia", "Infiltration", "Mass", "Nodule", "Pleural_Thickening",
++    "Pneumonia", "Pneumothorax",
++]
++
++# CheXmask landmarks: 120 (x, y) points in pixels of the original image, in this order:
++# 44 on the right lung, 50 on the left lung, 26 on the heart.
++LUNGS, HEART = slice(0, 94), slice(94, 120)
++N_LANDMARK_VALUES = 240
++
++# Figure colors: light chart surface, ink, and one accent (the rest stays gray).
++SURFACE, INK, INK_2, MUTED = "#fcfcfb", "#0b0b0b", "#52514e", "#898781"
++GRID, AXIS, ACCENT = "#e1e0d9", "#c3c2b7", "#2a78d6"
++
++
++# ---------------------------------------------------------------- labels
++
++def find_column(df: pd.DataFrame, *candidates: str) -> str:
++    lowered = {c.strip().lower(): c for c in df.columns}
++    for cand in candidates:
++        if cand.lower() in lowered:
++            return lowered[cand.lower()]
++    raise KeyError(f"None of {candidates} found in CSV columns {list(df.columns)}")
++
++
++def load_labels(csv_source) -> pd.DataFrame:
++    """NIH Data_Entry_2017*.csv -> one row per image, one 0/1 column per finding."""
++    raw = pd.read_csv(csv_source)
++    df = pd.DataFrame({
++        "image": raw[find_column(raw, "Image Index")],
++        "finding_labels": raw[find_column(raw, "Finding Labels")],
++        "patient_id": raw[find_column(raw, "Patient ID")],
++        "age": raw[find_column(raw, "Patient Age")],
++        "sex": raw[find_column(raw, "Patient Gender", "Patient Sex")],
++        "view": raw[find_column(raw, "View Position")],
++        "follow_up": raw[find_column(raw, "Follow-up #")],
++    })
++    labels = df["finding_labels"].str.split("|")
++    for finding in ALL_FINDINGS:
++        df[finding.lower()] = labels.apply(lambda ls, f=finding: int(f in ls))
++    df["no_finding"] = labels.apply(lambda ls: int(ls == ["No Finding"]))
++    return df
++
++
++# ---------------------------------------------------------------- ctr
++
++def heart_chest_widths(landmarks: pd.Series) -> tuple[np.ndarray, np.ndarray]:
++    """Widths in pixels from CheXmask landmark strings ("x1,y1,x2,y2,..."); NaN if malformed.
++
++    Heart width: horizontal extent of the heart contour. Chest width: horizontal extent of both
++    lungs, from the outer edge of one lung to the outer edge of the other.
++    """
++    ok = landmarks.str.count(",").eq(N_LANDMARK_VALUES - 1).fillna(False).to_numpy(dtype=bool)
++    heart = np.full(len(landmarks), np.nan)
++    chest = np.full(len(landmarks), np.nan)
++    if ok.any():
++        xy = landmarks[ok].str.split(",", expand=True).astype(float).to_numpy().reshape(-1, 120, 2)
++        x = xy[:, :, 0]
++        heart[ok] = x[:, HEART].max(axis=1) - x[:, HEART].min(axis=1)
++        chest[ok] = x[:, LUNGS].max(axis=1) - x[:, LUNGS].min(axis=1)
++    return heart, chest
++
++
++def auroc(positives: np.ndarray, negatives: np.ndarray) -> float:
++    """Area under the ROC curve (Mann-Whitney U, ties counted as half)."""
++    ranks = pd.Series(np.concatenate([positives, negatives])).rank().to_numpy()
++    n_pos, n_neg = len(positives), len(negatives)
++    return float((ranks[:n_pos].sum() - n_pos * (n_pos + 1) / 2) / (n_pos * n_neg))
++
++
++def summarize(df: pd.DataFrame) -> pd.DataFrame:
++    rows = []
++    for view in ["PA", "AP"]:
++        d = df[df["view"] == view]
++        cardio, normal = d[d["cardiomegaly"] == 1], d[d["no_finding"] == 1]
++        for group, g in [("Cardiomegaly", cardio), ("No finding", normal)]:
++            rows.append({
++                "view": view, "group": group,
++                "images": len(g), "patients": g["patient_id"].nunique(),
++                "ctr_median": g["ctr"].median(),
++                "ctr_q25": g["ctr"].quantile(0.25), "ctr_q75": g["ctr"].quantile(0.75),
++                "pct_ctr_above_0.5": 100 * (g["ctr"] > 0.5).mean(),
++                "auroc_vs_no_finding": (auroc(cardio["ctr"].to_numpy(), normal["ctr"].to_numpy())
++                                        if group == "Cardiomegaly" else np.nan),
++            })
++    return pd.DataFrame(rows).round(3)
++
++
++def plot_ctr(df: pd.DataFrame, summary: pd.DataFrame, path: Path, min_rca: float) -> None:
++    import matplotlib
++    matplotlib.use("Agg")
++    import matplotlib.pyplot as plt
++
++    bins = np.arange(0.24, 0.8601, 0.02)  # 0.5 is a bin edge
++    fig, axes = plt.subplots(1, 2, figsize=(10, 4.4), sharey=True, facecolor=SURFACE)
++    top = 0.0
++    for ax, view in zip(axes, ["PA", "AP"]):
++        d = df[df["view"] == view]
++        for name, values, color in [("No finding", d.loc[d["no_finding"] == 1, "ctr"], MUTED),
++                                    ("Cardiomegaly", d.loc[d["cardiomegaly"] == 1, "ctr"], ACCENT)]:
++            density, _ = np.histogram(values, bins=bins, density=True)
++            top = max(top, density.max())
++            ax.stairs(density, bins, fill=True, color=color, alpha=0.1, linewidth=0)
++            ax.stairs(density, bins, color=color, linewidth=2, label=name)
++        ax.axvline(0.5, color=INK_2, linewidth=1, linestyle=(0, (4, 3)))
++
++        s = summary[summary["view"] == view].set_index("group")
++        ax.set_title(f"{view} films", loc="left", fontsize=12, color=INK, fontweight="medium")
++        ax.text(0.98, 0.96,
++                f"films with CTR > 0.5\n"
++                f"cardiomegaly  {s.loc['Cardiomegaly', 'pct_ctr_above_0.5']:.0f}%  "
++                f"(n = {s.loc['Cardiomegaly', 'images']:,})\n"
++                f"no finding  {s.loc['No finding', 'pct_ctr_above_0.5']:.0f}%  "
++                f"(n = {s.loc['No finding', 'images']:,})\n"
++                f"AUROC  {s.loc['Cardiomegaly', 'auroc_vs_no_finding']:.2f}",
++                transform=ax.transAxes, ha="right", va="top", fontsize=9.5, color=INK_2,
++                linespacing=1.5)
++
++        ax.set_facecolor(SURFACE)
++        ax.set_xlim(bins[0], bins[-1])
++        ax.set_xlabel("CTR (heart width / chest width)", fontsize=10, color=INK_2)
++        ax.grid(axis="y", color=GRID, linewidth=0.8)
++        ax.set_axisbelow(True)
++        ax.tick_params(colors=MUTED, labelcolor=INK_2, labelsize=9)
++        for side in ["top", "right"]:
++            ax.spines[side].set_visible(False)
++        for side in ["left", "bottom"]:
++            ax.spines[side].set_color(AXIS)
++    axes[0].set_ylim(0, 1.45 * top)  # headroom so the text never sits on a curve
++    axes[0].set_ylabel("Density", fontsize=10, color=INK_2)
++    axes[0].legend(loc="upper left", frameon=False, fontsize=9.5, labelcolor=INK)
++
++    fig.text(0.01, 0.97, "Cardiothoracic ratio from CheXmask masks, NIH ChestX-ray14",
++             fontsize=13, color=INK, fontweight="medium", va="top")
++    fig.text(0.01, 0.905, f"One value per film · masks with RCA Dice ≥ {min_rca} · "
++             "labels mined from radiology reports (noisy) · dashed line: the 0.5 rule",
++             fontsize=9.5, color=INK_2, va="top")
++    fig.subplots_adjust(top=0.78, bottom=0.13, left=0.07, right=0.99, wspace=0.06)
++    path.parent.mkdir(parents=True, exist_ok=True)
++    fig.savefig(path, dpi=200, facecolor=SURFACE)
++    plt.close(fig)
++
++
++def ctr(args: argparse.Namespace) -> None:
++    parts = []
++    for chunk in pd.read_csv(args.chexmask, usecols=["Image Index", "Dice RCA (Mean)", "Landmarks"],
++                             chunksize=20_000):
++        heart, chest = heart_chest_widths(chunk["Landmarks"])
++        parts.append(pd.DataFrame({"image": chunk["Image Index"].to_numpy(),
++                                   "rca_dice": chunk["Dice RCA (Mean)"].to_numpy(),
++                                   "heart_width": heart, "chest_width": chest}))
++    masks = pd.concat(parts, ignore_index=True)
++    masks["ctr"] = masks["heart_width"] / masks["chest_width"]
++
++    labels = load_labels(args.labels)
++    keep = ["image", "patient_id", "view", "age", "sex",
++            "cardiomegaly", "effusion", "pneumothorax", "no_finding"]
++    df = labels[keep].merge(masks, on="image", how="inner")
++    df["good_mask"] = (df["rca_dice"] >= args.min_rca) & df["ctr"].notna()
++    args.out.parent.mkdir(parents=True, exist_ok=True)
++    df.round(4).to_csv(args.out, index=False)
++    print(f"{len(labels):,} labelled images, {len(masks):,} with CheXmask masks, "
++          f"{len(df):,} matched, {int(df['good_mask'].sum()):,} with RCA Dice >= {args.min_rca}. "
++          f"Per-image table: {args.out}")
++
++    good = df[df["good_mask"]]
++    summary = summarize(good)
++    args.results.mkdir(parents=True, exist_ok=True)
++    summary.to_csv(args.results / "ctr_summary.csv", index=False)
++    plot_ctr(good, summary, args.results / "ctr_by_view.png", args.min_rca)
++    print(summary.to_string(index=False))
++    print(f"Figure: {args.results / 'ctr_by_view.png'}")
++
++
++# ---------------------------------------------------------------- prepare
++
++_ZIP: zipfile.ZipFile | None = None  # one handle per worker process
++
++
++def patient_split(patient_id, val_frac: float, test_frac: float) -> str:
++    """Deterministic split from a hash of the patient ID."""
++    h = int(hashlib.md5(str(patient_id).encode()).hexdigest(), 16) / 16**32
++    if h < test_frac:
++        return "test"
++    if h < test_frac + val_frac:
++        return "val"
++    return "train"
++
++
++def select(df: pd.DataFrame, views: list[str], findings: list[str], n_normal: int, seed: int) -> pd.DataFrame:
++    df = df[df["view"].isin(views)]
++    positives = df[df[[f.lower() for f in findings]].sum(axis=1) > 0]
++    normals = df[df["no_finding"] == 1]
++    normals = normals.sample(n=min(n_normal, len(normals)), random_state=seed)
++    return pd.concat([positives, normals]).drop_duplicates("image").reset_index(drop=True)
++
++
++def _open_zip(path: str) -> None:
++    global _ZIP
++    _ZIP = zipfile.ZipFile(path)
++
++
++def to_square_resized(src, dst: Path, size: int) -> None:
++    img = Image.open(src).convert("L")  # also handles the few RGBA images in NIH
++    w, h = img.size
++    if w != h:  # pad to square (black borders) to keep the anatomy's proportions
++        side = max(w, h)
++        canvas = Image.new("L", (side, side), 0)
++        canvas.paste(img, ((side - w) // 2, (side - h) // 2))
++        img = canvas
++    img = img.resize((size, size), Image.LANCZOS)
++    dst.parent.mkdir(parents=True, exist_ok=True)
++    tmp = dst.with_suffix(".tmp.png")
++    img.save(tmp)
++    tmp.replace(dst)  # atomic: no half-written files if the job is killed
++
++
++def convert_one(task: tuple[str, str, int]) -> str | None:
++    src, dst, size = task
++    try:
++        source = io.BytesIO(_ZIP.read(src)) if _ZIP is not None else Path(src)
++        to_square_resized(source, Path(dst), size)
++        return None
++    except Exception as exc:  # keep going; report at the end
++        return f"{src}: {exc}"
++
++
++def prepare(args: argparse.Namespace) -> None:
++    zf = zipfile.ZipFile(args.nih_zip) if args.nih_zip else None
++    if zf is not None:
++        members = zf.namelist()
++        csv_member = next((m for m in sorted(members)
++                           if Path(m).name.startswith("Data_Entry_2017") and m.endswith(".csv")), None)
++        if args.csv is None and csv_member is None:
++            raise SystemExit(f"No Data_Entry_2017*.csv inside {args.nih_zip}; pass --csv.")
++        csv_source = args.csv or io.BytesIO(zf.read(csv_member))
++    else:
++        csv_source = args.csv or next(iter(sorted(args.nih_dir.rglob("Data_Entry_2017*.csv"))), None)
++        if csv_source is None:
++            raise SystemExit(f"No Data_Entry_2017*.csv found under {args.nih_dir}; pass --csv.")
++
++    views = [v.strip() for v in args.views.split(",")]
++    findings = [f.strip() for f in args.findings.split(",")]
++    unknown = set(findings) - set(ALL_FINDINGS)
++    if unknown:
++        raise SystemExit(f"Unknown findings {unknown}. Valid: {ALL_FINDINGS}")
++
++    meta = select(load_labels(csv_source), views, findings, args.n_normal, args.seed)
++    meta["split"] = meta["patient_id"].apply(patient_split, args=(args.val_frac, args.test_frac))
++    meta["file"] = "images/" + meta["image"]
++
++    wanted = set(meta["image"])
++    if zf is not None:
++        sources = {Path(m).name: m for m in members if Path(m).name in wanted}
++    else:
++        sources = {p.name: str(p) for p in args.nih_dir.rglob("*.png") if p.name in wanted}
++    image_dir = args.out_dir / "images"
++
++    tasks = [(sources[name], str(image_dir / name), args.size)
++             for name in meta["image"] if name in sources and not (image_dir / name).exists()]
++    errors: list[str] = []
++    if tasks:
++        pool_kwargs = {"initializer": _open_zip, "initargs": (str(args.nih_zip),)} if zf is not None else {}
++        with ProcessPoolExecutor(max_workers=args.workers, **pool_kwargs) as pool:
++            for i, err in enumerate(pool.map(convert_one, tasks, chunksize=32), start=1):
++                if err:
++                    errors.append(err)
++                if i % 1000 == 0:
++                    print(f"  converted {i}/{len(tasks)}", flush=True)
++
++    meta["available"] = meta["image"].apply(lambda n: (image_dir / n).exists())
++    args.out_dir.mkdir(parents=True, exist_ok=True)
++    meta.to_csv(args.out_dir / "metadata.csv", index=False)
++
++    avail = meta[meta["available"]]
++    print(f"Selected {len(meta)} images ({', '.join(views)} views); found in source: {len(sources)}; "
++          f"converted now: {len(tasks) - len(errors)}; available in total: {len(avail)}")
++    print("Available per split:", avail["split"].value_counts().to_dict())
++    print("Available per finding:", {f: int(avail[f.lower()].sum()) for f in findings},
++          "| no finding:", int(avail["no_finding"].sum()))
++    if errors:
++        print(f"{len(errors)} errors, first ones:", *errors[:5], sep="\n  ")
++
++
++# ---------------------------------------------------------------- command line
++
++def main() -> None:
++    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
++    sub = parser.add_subparsers(dest="command", required=True)
++
++    c = sub.add_parser("ctr", help="CTR per image from CheXmask, summary table and figure")
++    c.add_argument("--chexmask", type=Path, default=DATA / "chexmask_nih.csv",
++                   help="CheXmask OriginalResolution/ChestX-Ray8.csv")
++    c.add_argument("--labels", type=Path, default=DATA / "Data_Entry_2017.csv", help="NIH labels CSV")
++    c.add_argument("--min-rca", type=float, default=0.7,
++                   help="Keep masks with Dice RCA (Mean) >= this (CheXmask authors' advice: 0.7)")
++    c.add_argument("--out", type=Path, default=OUTPUTS / "ctr_nih.csv")
++    c.add_argument("--results", type=Path, default=RESULTS)
++    c.set_defaults(func=ctr)
++
++    p = sub.add_parser("prepare", help="512-px NIH subset with a patient-level split")
++    src = p.add_mutually_exclusive_group(required=True)
++    src.add_argument("--nih-zip", type=Path, help="The Kaggle zip (nih-chest-xrays/data), read without extracting")
++    src.add_argument("--nih-dir", type=Path, help="Folder with Data_Entry_2017*.csv and the PNG images")
++    p.add_argument("--out-dir", type=Path, default=DATA / "nih512")
++    p.add_argument("--csv", type=Path, default=None, help="Labels CSV (default: found in the zip/folder)")
++    p.add_argument("--size", type=int, default=512)
++    p.add_argument("--views", default="PA", help="Comma-separated views to keep, e.g. PA or PA,AP")
++    p.add_argument("--findings", default="Cardiomegaly,Effusion,Pneumothorax")
++    p.add_argument("--n-normal", type=int, default=8000, help="Number of 'No Finding' images to keep")
++    p.add_argument("--val-frac", type=float, default=0.1)
++    p.add_argument("--test-frac", type=float, default=0.1)
++    p.add_argument("--seed", type=int, default=0)
++    p.add_argument("--workers", type=int, default=int(os.environ.get("SLURM_CPUS_PER_TASK", os.cpu_count() or 1)))
++    p.set_defaults(func=prepare)
++
++    args = parser.parse_args()
++    args.func(args)
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/logs/.gitkeep b/logs/.gitkeep
+deleted file mode 100644
+index e69de29..0000000
+diff --git a/scripts/check_cluster.sh b/scripts/check_cluster.sh
+deleted file mode 100644
+index 6e9feb3..0000000
+--- a/scripts/check_cluster.sh
++++ /dev/null
+@@ -1,56 +0,0 @@
+-#!/usr/bin/env bash
+-# What resources do I have? Run it twice:
+-#   on nash:              bash scripts/check_cluster.sh | tee logs/check_nash.txt
+-#   on a compute node:    srun --gres=shard:1 --cpus-per-task=2 --mem=4GB bash scripts/check_cluster.sh | tee logs/check_node.txt
+-set -u
+-
+-section() { printf '\n== %s\n' "$1"; }
+-
+-section "Host"
+-echo "host=$(hostname)  user=${USER:-$(id -un)}  date=$(date '+%Y-%m-%d %H:%M')"
+-
+-section "Disk quota and free space"
+-quota -s 2>/dev/null || echo "(no 'quota' command: rely on df below)"
+-df -h "$HOME" 2>/dev/null | sed 's/^/home  /'
+-for d in /tmp /scratch /local /matieres; do
+-  [ -d "$d" ] && df -h "$d" 2>/dev/null | tail -1 | sed "s|^|$d  |"
+-done
+-echo "home usage (may take a few seconds):"
+-du -sh "$HOME" 2>/dev/null
+-
+-section "Slurm partitions: name, time limit, GRES, node count, nodes"
+-if command -v sinfo >/dev/null 2>&1; then
+-  sinfo -o "%P %l %G %D %N"
+-else
+-  echo "(sinfo not available on this host)"
+-fi
+-
+-section "GPU"
+-if command -v nvidia-smi >/dev/null 2>&1; then
+-  nvidia-smi --query-gpu=name,memory.total,memory.used --format=csv
+-else
+-  echo "(no GPU visible on this host)"
+-fi
+-
+-section "Python and PyTorch"
+-command -v python3 >/dev/null 2>&1 && python3 --version
+-python3 - <<'EOF' 2>/dev/null || echo "(torch not installed yet)"
+-import torch
+-print("torch", torch.__version__, "| cuda available:", torch.cuda.is_available())
+-if torch.cuda.is_available():
+-    p = torch.cuda.get_device_properties(0)
+-    print("device:", p.name, f"| compute capability {p.major}.{p.minor}",
+-          "| native bf16:", p.major >= 8)
+-EOF
+-
+-section "Internet access (any HTTP code other than 000 = reachable; 000 = blocked or timeout)"
+-for url in https://huggingface.co https://www.kaggle.com https://physionet.org \
+-           https://download.pytorch.org https://pypi.org https://www.googleapis.com; do
+-  code=$(curl -s -o /dev/null -m 10 -w '%{http_code}' "$url" 2>/dev/null)
+-  printf '%-32s %s\n' "$url" "${code:-000}"
+-done
+-
+-section "Tools"
+-for t in git rclone kaggle huggingface-cli tmux; do
+-  printf '%-16s %s\n' "$t" "$(command -v "$t" 2>/dev/null || echo 'not found')"
+-done
+diff --git a/scripts/prepare_nih_subset.py b/scripts/prepare_nih_subset.py
+deleted file mode 100644
+index 5c3f5ac..0000000
+--- a/scripts/prepare_nih_subset.py
++++ /dev/null
+@@ -1,197 +0,0 @@
+-"""Build a 512-px NIH ChestX-ray14 subset with a patient-level split.
+-
+-Reads either the Kaggle zip directly (--nih-zip, no need to unzip 45 GB) or an
+-extracted folder (--nih-dir). Works on whatever part of the dataset is present;
+-images already converted are skipped; metadata.csv is rewritten at each run.
+-
+-Examples (inside a job, see slurm/download_nih.sbatch):
+-    python scripts/prepare_nih_subset.py --nih-zip "$JOB_TMP/data.zip" --out-dir data/nih512
+-    python scripts/prepare_nih_subset.py --nih-dir /path/to/extracted --out-dir data/nih512
+-
+-Selection (defaults): PA views only; every image with Cardiomegaly, Effusion or
+-Pneumothorax; plus 8,000 "No Finding" images. Split 80/10/10 by patient, so the
+-same patient never appears in two splits.
+-"""
+-from __future__ import annotations
+-
+-import argparse
+-import hashlib
+-import io
+-import os
+-import zipfile
+-from concurrent.futures import ProcessPoolExecutor
+-from pathlib import Path
+-
+-import pandas as pd
+-from PIL import Image
+-
+-ALL_FINDINGS = [
+-    "Atelectasis", "Cardiomegaly", "Consolidation", "Edema", "Effusion", "Emphysema",
+-    "Fibrosis", "Hernia", "Infiltration", "Mass", "Nodule", "Pleural_Thickening",
+-    "Pneumonia", "Pneumothorax",
+-]
+-
+-_ZIP: zipfile.ZipFile | None = None  # one handle per worker process
+-
+-
+-def parse_args() -> argparse.Namespace:
+-    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+-    src = p.add_mutually_exclusive_group(required=True)
+-    src.add_argument("--nih-zip", type=Path,
+-                     help="The Kaggle zip (nih-chest-xrays/data), read without extracting.")
+-    src.add_argument("--nih-dir", type=Path,
+-                     help="Folder with Data_Entry_2017*.csv and the PNG images (any sub-folders).")
+-    p.add_argument("--out-dir", type=Path, required=True)
+-    p.add_argument("--csv", type=Path, default=None, help="Metadata CSV (default: found in the zip/folder).")
+-    p.add_argument("--size", type=int, default=512)
+-    p.add_argument("--views", default="PA", help="Comma-separated view positions to keep, e.g. PA or PA,AP.")
+-    p.add_argument("--findings", default="Cardiomegaly,Effusion,Pneumothorax")
+-    p.add_argument("--n-normal", type=int, default=8000, help="Number of 'No Finding' images to keep.")
+-    p.add_argument("--val-frac", type=float, default=0.1)
+-    p.add_argument("--test-frac", type=float, default=0.1)
+-    p.add_argument("--seed", type=int, default=0)
+-    p.add_argument("--workers", type=int,
+-                   default=int(os.environ.get("SLURM_CPUS_PER_TASK", os.cpu_count() or 1)))
+-    return p.parse_args()
+-
+-
+-def find_column(df: pd.DataFrame, *candidates: str) -> str:
+-    lowered = {c.strip().lower(): c for c in df.columns}
+-    for cand in candidates:
+-        if cand.lower() in lowered:
+-            return lowered[cand.lower()]
+-    raise KeyError(f"None of {candidates} found in CSV columns {list(df.columns)}")
+-
+-
+-def load_metadata(csv_source) -> pd.DataFrame:
+-    raw = pd.read_csv(csv_source)
+-    df = pd.DataFrame({
+-        "image": raw[find_column(raw, "Image Index")],
+-        "finding_labels": raw[find_column(raw, "Finding Labels")],
+-        "patient_id": raw[find_column(raw, "Patient ID")],
+-        "age": raw[find_column(raw, "Patient Age")],
+-        "sex": raw[find_column(raw, "Patient Gender", "Patient Sex")],
+-        "view": raw[find_column(raw, "View Position")],
+-        "follow_up": raw[find_column(raw, "Follow-up #")],
+-    })
+-    labels = df["finding_labels"].str.split("|")
+-    for finding in ALL_FINDINGS:
+-        df[finding.lower()] = labels.apply(lambda ls, f=finding: int(f in ls))
+-    df["no_finding"] = labels.apply(lambda ls: int(ls == ["No Finding"]))
+-    return df
+-
+-
+-def patient_split(patient_id, val_frac: float, test_frac: float) -> str:
+-    """Deterministic split from a hash of the patient ID."""
+-    h = int(hashlib.md5(str(patient_id).encode()).hexdigest(), 16) / 16**32
+-    if h < test_frac:
+-        return "test"
+-    if h < test_frac + val_frac:
+-        return "val"
+-    return "train"
+-
+-
+-def select(df: pd.DataFrame, views: list[str], findings: list[str], n_normal: int, seed: int) -> pd.DataFrame:
+-    df = df[df["view"].isin(views)]
+-    target_cols = [f.lower() for f in findings]
+-    positives = df[df[target_cols].sum(axis=1) > 0]
+-    normals = df[df["no_finding"] == 1]
+-    normals = normals.sample(n=min(n_normal, len(normals)), random_state=seed)
+-    return pd.concat([positives, normals]).drop_duplicates("image").reset_index(drop=True)
+-
+-
+-def _open_zip(path: str) -> None:
+-    global _ZIP
+-    _ZIP = zipfile.ZipFile(path)
+-
+-
+-def to_square_resized(src, dst: Path, size: int) -> None:
+-    img = Image.open(src).convert("L")  # also handles the few RGBA images in NIH
+-    w, h = img.size
+-    if w != h:  # pad to square (black borders) to keep the anatomy's proportions
+-        side = max(w, h)
+-        canvas = Image.new("L", (side, side), 0)
+-        canvas.paste(img, ((side - w) // 2, (side - h) // 2))
+-        img = canvas
+-    img = img.resize((size, size), Image.LANCZOS)
+-    dst.parent.mkdir(parents=True, exist_ok=True)
+-    tmp = dst.with_suffix(".tmp.png")
+-    img.save(tmp)
+-    tmp.replace(dst)  # atomic: no half-written files if the job is killed
+-
+-
+-def convert_one(args: tuple[str, str, int]) -> str | None:
+-    src, dst, size = args
+-    try:
+-        source = io.BytesIO(_ZIP.read(src)) if _ZIP is not None else Path(src)
+-        to_square_resized(source, Path(dst), size)
+-        return None
+-    except Exception as exc:  # keep going; report at the end
+-        return f"{src}: {exc}"
+-
+-
+-def main() -> None:
+-    args = parse_args()
+-
+-    zf = zipfile.ZipFile(args.nih_zip) if args.nih_zip else None
+-    if zf is not None:
+-        members = zf.namelist()
+-        csv_member = next((m for m in sorted(members)
+-                           if Path(m).name.startswith("Data_Entry_2017") and m.endswith(".csv")), None)
+-        if args.csv is None and csv_member is None:
+-            raise SystemExit(f"No Data_Entry_2017*.csv inside {args.nih_zip}; pass --csv.")
+-        csv_source = args.csv or io.BytesIO(zf.read(csv_member))
+-    else:
+-        csv_source = args.csv or next(iter(sorted(args.nih_dir.rglob("Data_Entry_2017*.csv"))), None)
+-        if csv_source is None:
+-            raise SystemExit(f"No Data_Entry_2017*.csv found under {args.nih_dir}; pass --csv.")
+-
+-    views = [v.strip() for v in args.views.split(",")]
+-    findings = [f.strip() for f in args.findings.split(",")]
+-    unknown = set(findings) - set(ALL_FINDINGS)
+-    if unknown:
+-        raise SystemExit(f"Unknown findings {unknown}. Valid: {ALL_FINDINGS}")
+-
+-    meta = select(load_metadata(csv_source), views, findings, args.n_normal, args.seed)
+-    meta["split"] = meta["patient_id"].apply(patient_split, args=(args.val_frac, args.test_frac))
+-    meta["file"] = "images/" + meta["image"]
+-
+-    wanted = set(meta["image"])
+-    if zf is not None:
+-        sources = {Path(m).name: m for m in members if Path(m).name in wanted}
+-    else:
+-        sources = {p.name: str(p) for p in args.nih_dir.rglob("*.png") if p.name in wanted}
+-    image_dir = args.out_dir / "images"
+-
+-    tasks = [
+-        (sources[name], str(image_dir / name), args.size)
+-        for name in meta["image"]
+-        if name in sources and not (image_dir / name).exists()
+-    ]
+-    errors: list[str] = []
+-    if tasks:
+-        pool_kwargs = {"initializer": _open_zip, "initargs": (str(args.nih_zip),)} if zf is not None else {}
+-        with ProcessPoolExecutor(max_workers=args.workers, **pool_kwargs) as pool:
+-            for i, err in enumerate(pool.map(convert_one, tasks, chunksize=32), start=1):
+-                if err:
+-                    errors.append(err)
+-                if i % 1000 == 0:
+-                    print(f"  converted {i}/{len(tasks)}", flush=True)
+-
+-    meta["available"] = meta["image"].apply(lambda n: (image_dir / n).exists())
+-    args.out_dir.mkdir(parents=True, exist_ok=True)
+-    meta.to_csv(args.out_dir / "metadata.csv", index=False)
+-
+-    avail = meta[meta["available"]]
+-    print(f"Selected {len(meta)} images ({', '.join(views)} views); "
+-          f"found in source: {len(sources)}; converted now: {len(tasks) - len(errors)}; "
+-          f"available in total: {len(avail)}")
+-    print("Available per split:", avail["split"].value_counts().to_dict())
+-    print("Available per finding:", {f: int(avail[f.lower()].sum()) for f in findings},
+-          "| no finding:", int(avail["no_finding"].sum()))
+-    if errors:
+-        print(f"{len(errors)} errors, first ones:", *errors[:5], sep="\n  ")
+-
+-
+-if __name__ == "__main__":
+-    main()
+diff --git a/scripts/smoke_test.py b/scripts/smoke_test.py
+deleted file mode 100644
+index bc7b3c5..0000000
+--- a/scripts/smoke_test.py
++++ /dev/null
+@@ -1,43 +0,0 @@
+-"""GPU smoke test.
+-
+-Run on the cluster:  sbatch slurm/job.sbatch scripts/smoke_test.py
+-Prints the GPU, whether bf16 is native, and matmul speed per precision.
+-"""
+-import time
+-
+-import torch
+-
+-
+-def matmul_tflops(dtype: torch.dtype, n: int = 8192, reps: int = 10) -> float:
+-    a = torch.randn(n, n, device="cuda", dtype=dtype)
+-    b = torch.randn(n, n, device="cuda", dtype=dtype)
+-    a @ b  # warm-up
+-    torch.cuda.synchronize()
+-    start = time.perf_counter()
+-    for _ in range(reps):
+-        a @ b
+-    torch.cuda.synchronize()
+-    seconds = (time.perf_counter() - start) / reps
+-    return 2 * n**3 / seconds / 1e12
+-
+-
+-def main() -> None:
+-    print("torch", torch.__version__, "| built for CUDA", torch.version.cuda)
+-    if not torch.cuda.is_available():
+-        raise SystemExit("No GPU visible. Did the job request --gres?")
+-
+-    props = torch.cuda.get_device_properties(0)
+-    native_bf16 = props.major >= 8  # Ampere (A40) and newer
+-    print(f"GPU: {props.name} | {props.total_memory / 1e9:.1f} GB | "
+-          f"compute capability {props.major}.{props.minor} | native bf16: {native_bf16}")
+-
+-    dtypes = [torch.float32, torch.float16] + ([torch.bfloat16] if native_bf16 else [])
+-    for dtype in dtypes:
+-        print(f"{str(dtype):16s} matmul: {matmul_tflops(dtype):6.1f} TFLOPS")
+-
+-    if not native_bf16:
+-        print("Turing GPU: train with fp16 autocast + GradScaler; run MedGemma on the A40.")
+-
+-
+-if __name__ == "__main__":
+-    main()
+diff --git a/slurm/data.sbatch b/slurm/data.sbatch
+new file mode 100644
+index 0000000..9f4149f
+--- /dev/null
++++ b/slurm/data.sbatch
+@@ -0,0 +1,68 @@
++#!/bin/bash
++# Stage 1 in one job, from the project folder on nash:  sbatch slurm/data.sbatch
++#   1. NIH labels (Kaggle)                     -> data/Data_Entry_2017.csv
++#   2. CheXmask heart/lung masks for NIH       -> data/chexmask_nih.csv (2.2 GB)
++#   3. CTR per image + first figure (~1 min)   -> outputs/ctr_nih.csv, results/
++#   4. NIH images, ~45 GB zip (Kaggle)         -> 512-px subset in data/nih512, then the zip is deleted
++# Finished steps are skipped, so if the 4 h limit stops the job, resubmit it: the NIH download
++# resumes where it stopped. Needs a Kaggle API token in ~/.kaggle/kaggle.json.
++#
++#SBATCH --job-name=data
++#SBATCH --partition=rtx6000
++#SBATCH --gres=shard:1             # no GPU used; the smallest request, in case CPU-only jobs are refused
++#SBATCH --cpus-per-task=8
++#SBATCH --mem=16G
++#SBATCH --time=04:00:00            # partition limit
++#SBATCH --output=logs/%x-%j.out
++
++set -euo pipefail
++
++PROJECT_DIR="${PROJECT_DIR:-$HOME/cxr-grounding}"
++cd "$PROJECT_DIR"
++source .venv/bin/activate
++mkdir -p data/raw outputs results
++echo "node=$(hostname) start=$(date '+%F %T')"
++
++# 1. Labels
++if [ ! -f data/Data_Entry_2017.csv ]; then
++  kaggle datasets download nih-chest-xrays/data -f Data_Entry_2017.csv -p data
++  if [ -f data/Data_Entry_2017.csv.zip ]; then  # Kaggle sometimes zips single files
++    python -m zipfile -e data/Data_Entry_2017.csv.zip data && rm data/Data_Entry_2017.csv.zip
++  fi
++fi
++
++# 2. CheXmask. PhysioNet is slow, so the file comes from a Hugging Face mirror and must match
++#    PhysioNet's official SHA-256 checksum.
++if [ ! -f data/chexmask_nih.csv ]; then
++  curl -fL -C - -o data/chexmask_nih.csv.part \
++    https://huggingface.co/datasets/ming0100/chexmask/resolve/main/OriginalResolution/ChestX-Ray8.csv \
++    || true  # a complete .part makes curl fail on resume; the checksum decides
++  sum=$(curl -fsSL https://physionet.org/files/chexmask-cxr-segmentation-data/1.0.0/SHA256SUMS.txt \
++        | awk '$2 == "OriginalResolution/ChestX-Ray8.csv" {print $1}')
++  if ! echo "$sum  data/chexmask_nih.csv.part" | sha256sum -c -; then
++    echo "CheXmask checksum mismatch: delete data/chexmask_nih.csv.part and resubmit." >&2
++    exit 1
++  fi
++  mv data/chexmask_nih.csv.part data/chexmask_nih.csv
++fi
++
++# 3. CTR + figure
++python -m cxr.data ctr
++
++# 4. NIH images: the zip goes to data/raw (a node's /tmp is too small) and is read without unzipping.
++ZIP=data/raw/data.zip
++if [ -f data/nih512/metadata.csv ] && [ ! -f "$ZIP" ]; then
++  echo "NIH subset already built."
++else
++  if ! python -c "import sys, zipfile; zipfile.ZipFile(sys.argv[1])" "$ZIP" 2>/dev/null; then
++    echo "Downloading NIH ChestX-ray14 (about 45 GB)..."
++    kaggle datasets download nih-chest-xrays/data -p data/raw
++  fi
++  python -m cxr.data prepare --nih-zip "$ZIP"
++  du -sh data/nih512
++  if [ "${KEEP_ZIP:-0}" != 1 ]; then
++    rm -f "$ZIP"
++    echo "Deleted $ZIP (KEEP_ZIP=1 sbatch ... keeps it)"
++  fi
++fi
++echo "end=$(date '+%F %T')"
+diff --git a/slurm/download_nih.sbatch b/slurm/download_nih.sbatch
+deleted file mode 100644
+index 718725a..0000000
+--- a/slurm/download_nih.sbatch
++++ /dev/null
+@@ -1,34 +0,0 @@
+-#!/bin/bash
+-# Download NIH ChestX-ray14 from Kaggle into node-local /tmp and keep only the 512-px subset.
+-# No GPU needed. Needs ~45 GB free in the node's /tmp (check with scripts/check_cluster.sh)
+-# and a Kaggle API token in ~/.kaggle/kaggle.json (chmod 600).
+-#   sbatch slurm/download_nih.sbatch
+-#
+-#SBATCH --job-name=nih-download
+-#SBATCH --partition=rtx6000        # any partition allowed for CPU jobs; check with: sinfo
+-#SBATCH --cpus-per-task=8
+-#SBATCH --mem=16G
+-#SBATCH --time=06:00:00
+-#SBATCH --output=logs/%x-%j.out
+-
+-set -euo pipefail
+-
+-PROJECT_DIR="${PROJECT_DIR:-$HOME/cxr-grounding}"
+-cd "$PROJECT_DIR"
+-source .venv/bin/activate
+-
+-JOB_TMP="/tmp/${USER:-$(id -un)}/${SLURM_JOB_ID:-manual}"
+-mkdir -p "$JOB_TMP"
+-trap 'rm -rf "$JOB_TMP"' EXIT
+-df -h /tmp
+-
+-echo "Downloading (about 45 GB)..."
+-kaggle datasets download -d nih-chest-xrays/data -p "$JOB_TMP"
+-ls -lh "$JOB_TMP"
+-
+-python scripts/prepare_nih_subset.py --nih-zip "$JOB_TMP"/*.zip --out-dir data/nih512
+-
+-# One tarball of the subset for the Google Drive archive (optional, needs rclone configured):
+-tar -cf data/nih512.tar -C data nih512
+-# rclone copy data/nih512.tar gdrive:cxr-grounding/
+-du -sh data/nih512 data/nih512.tar
+diff --git a/slurm/job.sbatch b/slurm/job.sbatch
+index 3f1853f..f8a8b53 100644
+--- a/slurm/job.sbatch
++++ b/slurm/job.sbatch
+@@ -1,15 +1,17 @@
+ #!/bin/bash
+-# Generic GPU job. Usage (from the project folder on nash):
+-#   sbatch slurm/job.sbatch scripts/smoke_test.py
+-#   sbatch --partition=<a40-partition> --time=12:00:00 slurm/job.sbatch scripts/audit.py --finding cardiomegaly
+-# Command-line --options override the #SBATCH lines below.
++# Any GPU run of a stage, from the project folder on nash:
++#   sbatch slurm/job.sbatch -m cxr.audit --finding cardiomegaly
++#   sbatch --partition=a40 slurm/job.sbatch -m cxr.audit ...      # MedGemma needs the A40 (bf16)
++#   sbatch --gres=shard:1 --time=00:15:00 slurm/job.sbatch -m ...  # quick test on 1/6 of a GPU
++# Options given to sbatch override the #SBATCH lines below. Every partition stops jobs after 4 h,
++# so long runs save checkpoints and resume when resubmitted.
+ #
+ #SBATCH --job-name=cxr
+-#SBATCH --partition=rtx6000        # check the real names with: sinfo
+-#SBATCH --gres=shard:1             # as in the Ensicompute guide; ask support how to get a full GPU
++#SBATCH --partition=rtx6000
++#SBATCH --gres=gpu:1               # a full GPU; shards share one GPU's memory with other jobs
+ #SBATCH --cpus-per-task=4
+ #SBATCH --mem=16G                  # system RAM, not GPU memory
+-#SBATCH --time=04:00:00            # check the partition limit with: sinfo
++#SBATCH --time=04:00:00            # partition limit
+ #SBATCH --output=logs/%x-%j.out
+ 
+ set -euo pipefail
+@@ -18,9 +20,6 @@ PROJECT_DIR="${PROJECT_DIR:-$HOME/cxr-grounding}"
+ cd "$PROJECT_DIR"
+ source .venv/bin/activate
+ 
+-# Keep caches inside the project folder (not in a small home quota).
+-export HF_HOME="$PROJECT_DIR/.cache/huggingface"
+-export TORCH_HOME="$PROJECT_DIR/.cache/torch"
+ export WANDB_DIR="$PROJECT_DIR/outputs"
+ export WANDB_MODE="${WANDB_MODE:-offline}"   # sync later with: wandb sync outputs/wandb/offline-run-*
+ 
+@@ -29,8 +28,9 @@ export JOB_TMP="/tmp/${USER:-$(id -un)}/${SLURM_JOB_ID:-manual}"
+ mkdir -p "$JOB_TMP"
+ trap 'rm -rf "$JOB_TMP"' EXIT
+ 
+-echo "job=${SLURM_JOB_ID:-manual} node=$(hostname) start=$(date '+%F %T')"
+-nvidia-smi --query-gpu=name,memory.total --format=csv,noheader || true
++echo "job=${SLURM_JOB_ID:-manual} node=$(hostname) gpu=${CUDA_VISIBLE_DEVICES:-none} start=$(date '+%F %T')"
++# Only the GPU(s) given to this job (plain nvidia-smi lists every GPU of the node).
++nvidia-smi --query-gpu=name,memory.total --format=csv,noheader ${CUDA_VISIBLE_DEVICES:+-i "$CUDA_VISIBLE_DEVICES"} || true
+ 
+ srun python "$@"
+ 
+diff --git a/setup/create_env.sh b/slurm/setup_env.sh
+similarity index 59%
+rename from setup/create_env.sh
+rename to slurm/setup_env.sh
+index 3c32c38..09a3414 100644
+--- a/setup/create_env.sh
++++ b/slurm/setup_env.sh
+@@ -1,10 +1,12 @@
+ #!/usr/bin/env bash
+-# Create the Python environment once, on nash:  bash setup/create_env.sh
+-# Takes ~6-8 GB (PyTorch + CUDA libraries), so run it where you have space.
++# Create the Python environment once, on nash:  bash slurm/setup_env.sh
++# Takes ~6-8 GB (PyTorch + CUDA libraries). Temporary files go to .cache/tmp because nash's /tmp is small.
+ set -euo pipefail
+ 
+ PROJECT_DIR="${PROJECT_DIR:-$HOME/cxr-grounding}"
+ cd "$PROJECT_DIR"
++mkdir -p logs outputs results data .cache/tmp
++export TMPDIR="$PROJECT_DIR/.cache/tmp" PIP_NO_CACHE_DIR=1
+ 
+ if ! python3 -m venv .venv 2>/dev/null; then
+   echo "python3 -m venv failed. Alternative: install uv (pip install --user uv) and run: uv venv .venv"
+@@ -13,11 +15,10 @@ fi
+ source .venv/bin/activate
+ 
+ pip install --upgrade pip
+-# CUDA 12.4 build, matching the cluster driver (550.54.15 / CUDA 12.4)
++# CUDA 12.4 build, matching the cluster driver (550 / CUDA 12.4)
+ pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
+ pip install -r requirements.txt
+ pip install bitsandbytes   # optional (4-bit loading); does not install on macOS
+ 
+-mkdir -p logs outputs data .cache
+ python -c "import torch; print('torch', torch.__version__, '| CUDA', torch.version.cuda)"
+-echo "Done. Next: hf auth login  (or huggingface-cli login on older versions; needed for RadEdit and MedGemma)"
++echo "Done. Next: hf auth login  (needed for RadEdit and MedGemma)"

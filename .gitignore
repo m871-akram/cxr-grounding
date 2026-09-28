@@ -1,10 +1,11 @@
+# Cluster-only folders (see README): datasets, big working files, Slurm logs, environment
 .venv/
 .cache/
 data/
 outputs/
-logs/*.out
-logs/*.txt
+logs/
 wandb/
+# Model weights never go to git
 *.pt
 *.pth
 *.ckpt
