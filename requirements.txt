@@ -1,0 +1,22 @@
+# Install PyTorch first:
+#   cluster (CUDA 12.4): pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
+#   Mac M1 (MPS):        pip install torch torchvision
+diffusers>=0.30
+transformers>=4.50      # Gemma 3 / MedGemma support
+accelerate>=1.0
+peft>=0.13
+datasets>=3.0
+huggingface_hub>=0.25
+torchxrayvision>=1.2
+scikit-image
+opencv-python-headless
+pillow
+numpy
+pandas
+pyarrow
+matplotlib
+lpips
+torchmetrics
+wandb
+kaggle
+tqdm

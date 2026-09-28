@@ -1,0 +1,14 @@
+.venv/
+.cache/
+data/
+outputs/
+logs/*.out
+logs/*.txt
+wandb/
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+__pycache__/
+.ipynb_checkpoints/
+.DS_Store
