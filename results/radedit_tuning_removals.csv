@@ -1,0 +1,101 @@
+config,finding,direction,prompt,skip_ratio,image,patient_id,p_before:densenet121-res224-pc,p_after:densenet121-res224-pc,ctr_before,ctr_after,max_change_outside,classifiers_ok,anatomy_ok,outside_ok,valid,p_before:densenet121-res224-chex,p_after:densenet121-res224-chex,lung_area_change
+cardiomegaly_remove_generic_skip0.3,cardiomegaly,remove,No acute cardiopulmonary process,0.3,00005827_000.png,5827,0.3894,0.919,0.5469,0.6283,0,False,False,True,False,,,
+cardiomegaly_remove_generic_skip0.3,cardiomegaly,remove,No acute cardiopulmonary process,0.3,00025810_000.png,25810,0.1153,0.8061,0.5296,0.6039,0,False,False,True,False,,,
+cardiomegaly_remove_generic_skip0.3,cardiomegaly,remove,No acute cardiopulmonary process,0.3,00000123_000.png,123,0.0529,0.029,0.5045,0.4212,0,True,True,True,True,,,
+cardiomegaly_remove_generic_skip0.3,cardiomegaly,remove,No acute cardiopulmonary process,0.3,00014544_000.png,14544,0.5043,0.6064,0.5426,0.5217,0,False,False,True,False,,,
+cardiomegaly_remove_generic_skip0.3,cardiomegaly,remove,No acute cardiopulmonary process,0.3,00021105_000.png,21105,0.621,0.7454,0.5188,0.5432,0,False,False,True,False,,,
+cardiomegaly_remove_generic_skip0.3,cardiomegaly,remove,No acute cardiopulmonary process,0.3,00028916_000.png,28916,0.5195,0.1836,0.5134,0.3463,0,True,True,True,True,,,
+cardiomegaly_remove_generic_skip0.3,cardiomegaly,remove,No acute cardiopulmonary process,0.3,00002119_002.png,2119,0.8005,0.121,0.6107,0.4122,0,True,True,True,True,,,
+cardiomegaly_remove_generic_skip0.3,cardiomegaly,remove,No acute cardiopulmonary process,0.3,00020471_007.png,20471,0.6925,0.5406,0.4971,0.4914,0,False,False,True,False,,,
+cardiomegaly_remove_generic_skip0.3,cardiomegaly,remove,No acute cardiopulmonary process,0.3,00013876_001.png,13876,0.8547,0.5605,0.5239,0.4854,0,False,True,True,False,,,
+cardiomegaly_remove_generic_skip0.3,cardiomegaly,remove,No acute cardiopulmonary process,0.3,00029273_000.png,29273,0.5867,0.6532,0.51,0.5029,0,False,False,True,False,,,
+cardiomegaly_remove_generic_skip0.2,cardiomegaly,remove,No acute cardiopulmonary process,0.2,00005827_000.png,5827,0.3894,0.9187,0.5469,0.6257,0,False,False,True,False,,,
+cardiomegaly_remove_generic_skip0.2,cardiomegaly,remove,No acute cardiopulmonary process,0.2,00025810_000.png,25810,0.1153,0.8083,0.5296,0.6039,0,False,False,True,False,,,
+cardiomegaly_remove_generic_skip0.2,cardiomegaly,remove,No acute cardiopulmonary process,0.2,00000123_000.png,123,0.0529,0.0283,0.5045,0.4234,0,True,True,True,True,,,
+cardiomegaly_remove_generic_skip0.2,cardiomegaly,remove,No acute cardiopulmonary process,0.2,00014544_000.png,14544,0.5043,0.6011,0.5426,0.523,0,False,False,True,False,,,
+cardiomegaly_remove_generic_skip0.2,cardiomegaly,remove,No acute cardiopulmonary process,0.2,00021105_000.png,21105,0.621,0.9631,0.5188,0.6065,0,False,False,True,False,,,
+cardiomegaly_remove_generic_skip0.2,cardiomegaly,remove,No acute cardiopulmonary process,0.2,00028916_000.png,28916,0.5195,0.524,0.5134,0.5417,0,False,False,True,False,,,
+cardiomegaly_remove_generic_skip0.2,cardiomegaly,remove,No acute cardiopulmonary process,0.2,00002119_002.png,2119,0.8005,0.122,0.6107,0.4122,0,True,True,True,True,,,
+cardiomegaly_remove_generic_skip0.2,cardiomegaly,remove,No acute cardiopulmonary process,0.2,00020471_007.png,20471,0.6925,0.5431,0.4971,0.4914,0,False,False,True,False,,,
+cardiomegaly_remove_generic_skip0.2,cardiomegaly,remove,No acute cardiopulmonary process,0.2,00013876_001.png,13876,0.8547,0.5618,0.5239,0.4854,0,False,True,True,False,,,
+cardiomegaly_remove_generic_skip0.2,cardiomegaly,remove,No acute cardiopulmonary process,0.2,00029273_000.png,29273,0.5867,0.8098,0.51,0.5256,0,False,False,True,False,,,
+cardiomegaly_remove_specific_skip0.3,cardiomegaly,remove,Normal heart size,0.3,00005827_000.png,5827,0.3894,0.9416,0.5469,0.6434,0,False,False,True,False,,,
+cardiomegaly_remove_specific_skip0.3,cardiomegaly,remove,Normal heart size,0.3,00025810_000.png,25810,0.1153,0.563,0.5296,0.5621,0,False,False,True,False,,,
+cardiomegaly_remove_specific_skip0.3,cardiomegaly,remove,Normal heart size,0.3,00000123_000.png,123,0.0529,0.5614,0.5045,0.5315,0,False,False,True,False,,,
+cardiomegaly_remove_specific_skip0.3,cardiomegaly,remove,Normal heart size,0.3,00014544_000.png,14544,0.5043,0.6542,0.5426,0.5587,0,False,False,True,False,,,
+cardiomegaly_remove_specific_skip0.3,cardiomegaly,remove,Normal heart size,0.3,00021105_000.png,21105,0.621,0.7762,0.5188,0.5514,0,False,False,True,False,,,
+cardiomegaly_remove_specific_skip0.3,cardiomegaly,remove,Normal heart size,0.3,00028916_000.png,28916,0.5195,0.7195,0.5134,0.5463,0,False,False,True,False,,,
+cardiomegaly_remove_specific_skip0.3,cardiomegaly,remove,Normal heart size,0.3,00002119_002.png,2119,0.8005,0.5221,0.6107,0.486,0,False,True,True,False,,,
+cardiomegaly_remove_specific_skip0.3,cardiomegaly,remove,Normal heart size,0.3,00020471_007.png,20471,0.6925,0.5815,0.4971,0.5029,0,False,False,True,False,,,
+cardiomegaly_remove_specific_skip0.3,cardiomegaly,remove,Normal heart size,0.3,00013876_001.png,13876,0.8547,0.7748,0.5239,0.5411,0,False,False,True,False,,,
+cardiomegaly_remove_specific_skip0.3,cardiomegaly,remove,Normal heart size,0.3,00029273_000.png,29273,0.5867,0.6382,0.51,0.5028,0,False,False,True,False,,,
+cardiomegaly_remove_specific_skip0.2,cardiomegaly,remove,Normal heart size,0.2,00005827_000.png,5827,0.3894,0.9416,0.5469,0.6434,0,False,False,True,False,,,
+cardiomegaly_remove_specific_skip0.2,cardiomegaly,remove,Normal heart size,0.2,00025810_000.png,25810,0.1153,0.5559,0.5296,0.5549,0,False,False,True,False,,,
+cardiomegaly_remove_specific_skip0.2,cardiomegaly,remove,Normal heart size,0.2,00000123_000.png,123,0.0529,0.5655,0.5045,0.5315,0,False,False,True,False,,,
+cardiomegaly_remove_specific_skip0.2,cardiomegaly,remove,Normal heart size,0.2,00014544_000.png,14544,0.5043,0.654,0.5426,0.5587,0,False,False,True,False,,,
+cardiomegaly_remove_specific_skip0.2,cardiomegaly,remove,Normal heart size,0.2,00021105_000.png,21105,0.621,0.782,0.5188,0.5514,0,False,False,True,False,,,
+cardiomegaly_remove_specific_skip0.2,cardiomegaly,remove,Normal heart size,0.2,00028916_000.png,28916,0.5195,0.7363,0.5134,0.5512,0,False,False,True,False,,,
+cardiomegaly_remove_specific_skip0.2,cardiomegaly,remove,Normal heart size,0.2,00002119_002.png,2119,0.8005,0.5219,0.6107,0.4835,0,False,True,True,False,,,
+cardiomegaly_remove_specific_skip0.2,cardiomegaly,remove,Normal heart size,0.2,00020471_007.png,20471,0.6925,0.5875,0.4971,0.5029,0,False,False,True,False,,,
+cardiomegaly_remove_specific_skip0.2,cardiomegaly,remove,Normal heart size,0.2,00013876_001.png,13876,0.8547,0.7703,0.5239,0.5411,0,False,False,True,False,,,
+cardiomegaly_remove_specific_skip0.2,cardiomegaly,remove,Normal heart size,0.2,00029273_000.png,29273,0.5867,0.6398,0.51,0.5,0,False,True,True,False,,,
+cardiomegaly_remove_band_skip0.3,cardiomegaly,remove,No acute cardiopulmonary process,0.3,00005827_000.png,5827,0.3894,0.5112,0.5469,0.555,0,False,False,True,False,,,
+cardiomegaly_remove_band_skip0.3,cardiomegaly,remove,No acute cardiopulmonary process,0.3,00025810_000.png,25810,0.1153,0.2147,0.5296,0.5268,0,False,False,True,False,,,
+cardiomegaly_remove_band_skip0.3,cardiomegaly,remove,No acute cardiopulmonary process,0.3,00000123_000.png,123,0.0529,0.0461,0.5045,0.473,0,True,True,True,True,,,
+cardiomegaly_remove_band_skip0.3,cardiomegaly,remove,No acute cardiopulmonary process,0.3,00014544_000.png,14544,0.5043,0.5026,0.5426,0.5039,0,False,False,True,False,,,
+cardiomegaly_remove_band_skip0.3,cardiomegaly,remove,No acute cardiopulmonary process,0.3,00021105_000.png,21105,0.621,0.6425,0.5188,0.5134,0,False,False,True,False,,,
+cardiomegaly_remove_band_skip0.3,cardiomegaly,remove,No acute cardiopulmonary process,0.3,00028916_000.png,28916,0.5195,0.5135,0.5134,0.5281,0,False,False,True,False,,,
+cardiomegaly_remove_band_skip0.3,cardiomegaly,remove,No acute cardiopulmonary process,0.3,00002119_002.png,2119,0.8005,0.5741,0.6107,0.4949,0,False,True,True,False,,,
+cardiomegaly_remove_band_skip0.3,cardiomegaly,remove,No acute cardiopulmonary process,0.3,00020471_007.png,20471,0.6925,0.6543,0.4971,0.5043,0,False,False,True,False,,,
+cardiomegaly_remove_band_skip0.3,cardiomegaly,remove,No acute cardiopulmonary process,0.3,00013876_001.png,13876,0.8547,0.8709,0.5239,0.5385,0,False,False,True,False,,,
+cardiomegaly_remove_band_skip0.3,cardiomegaly,remove,No acute cardiopulmonary process,0.3,00029273_000.png,29273,0.5867,0.5698,0.51,0.4914,0,False,True,True,False,,,
+cardiomegaly_remove_band_skip0.2,cardiomegaly,remove,No acute cardiopulmonary process,0.2,00005827_000.png,5827,0.3894,0.5115,0.5469,0.555,0,False,False,True,False,,,
+cardiomegaly_remove_band_skip0.2,cardiomegaly,remove,No acute cardiopulmonary process,0.2,00025810_000.png,25810,0.1153,0.2159,0.5296,0.5268,0,False,False,True,False,,,
+cardiomegaly_remove_band_skip0.2,cardiomegaly,remove,No acute cardiopulmonary process,0.2,00000123_000.png,123,0.0529,0.046,0.5045,0.473,0,True,True,True,True,,,
+cardiomegaly_remove_band_skip0.2,cardiomegaly,remove,No acute cardiopulmonary process,0.2,00014544_000.png,14544,0.5043,0.5025,0.5426,0.5039,0,False,False,True,False,,,
+cardiomegaly_remove_band_skip0.2,cardiomegaly,remove,No acute cardiopulmonary process,0.2,00021105_000.png,21105,0.621,0.6429,0.5188,0.5134,0,False,False,True,False,,,
+cardiomegaly_remove_band_skip0.2,cardiomegaly,remove,No acute cardiopulmonary process,0.2,00028916_000.png,28916,0.5195,0.5135,0.5134,0.5281,0,False,False,True,False,,,
+cardiomegaly_remove_band_skip0.2,cardiomegaly,remove,No acute cardiopulmonary process,0.2,00002119_002.png,2119,0.8005,0.5735,0.6107,0.4949,0,False,True,True,False,,,
+cardiomegaly_remove_band_skip0.2,cardiomegaly,remove,No acute cardiopulmonary process,0.2,00020471_007.png,20471,0.6925,0.6541,0.4971,0.5043,0,False,False,True,False,,,
+cardiomegaly_remove_band_skip0.2,cardiomegaly,remove,No acute cardiopulmonary process,0.2,00013876_001.png,13876,0.8547,0.8708,0.5239,0.5385,0,False,False,True,False,,,
+cardiomegaly_remove_band_skip0.2,cardiomegaly,remove,No acute cardiopulmonary process,0.2,00029273_000.png,29273,0.5867,0.5706,0.51,0.4914,0,False,True,True,False,,,
+effusion_remove_generic_skip0.3,effusion,remove,No acute cardiopulmonary process,0.3,00021840_000.png,21840,0.9952,0.123,,,0,False,False,True,False,0.8953,0.6346,-0.1463
+effusion_remove_generic_skip0.3,effusion,remove,No acute cardiopulmonary process,0.3,00029514_007.png,29514,0.564,0.5995,,,0,False,False,True,False,0.7917,0.5831,-0.1058
+effusion_remove_generic_skip0.3,effusion,remove,No acute cardiopulmonary process,0.3,00020018_002.png,20018,0.1252,0.0647,,,0,False,False,True,False,0.0682,0.2626,0.0415
+effusion_remove_generic_skip0.3,effusion,remove,No acute cardiopulmonary process,0.3,00016474_001.png,16474,0.843,0.5297,,,0,False,False,True,False,0.4614,0.5964,0.0378
+effusion_remove_generic_skip0.3,effusion,remove,No acute cardiopulmonary process,0.3,00011757_005.png,11757,0.5393,0.2322,,,0,False,False,True,False,0.2648,0.4231,0.0354
+effusion_remove_generic_skip0.3,effusion,remove,No acute cardiopulmonary process,0.3,00028821_000.png,28821,0.9142,0.9194,,,0,False,False,True,False,0.8288,0.7892,-0.0392
+effusion_remove_generic_skip0.3,effusion,remove,No acute cardiopulmonary process,0.3,00007034_006.png,7034,0.6892,0.5981,,,0,False,False,True,False,0.7706,0.2797,0.0166
+effusion_remove_generic_skip0.3,effusion,remove,No acute cardiopulmonary process,0.3,00015266_000.png,15266,0.9947,0.5037,,,0,False,False,True,False,0.8989,0.8205,0.0635
+effusion_remove_generic_skip0.3,effusion,remove,No acute cardiopulmonary process,0.3,00012659_040.png,12659,0.3586,0.1554,,,0,True,False,True,False,0.075,0.0442,-0.1722
+effusion_remove_generic_skip0.3,effusion,remove,No acute cardiopulmonary process,0.3,00004541_002.png,4541,0.5064,0.7303,,,0,False,False,True,False,0.6953,0.696,-0.2312
+effusion_remove_generic_skip0.2,effusion,remove,No acute cardiopulmonary process,0.2,00021840_000.png,21840,0.9952,0.3044,,,0,False,False,True,False,0.8953,0.541,-0.0724
+effusion_remove_generic_skip0.2,effusion,remove,No acute cardiopulmonary process,0.2,00029514_007.png,29514,0.564,0.2376,,,0,True,False,True,False,0.7917,0.2136,-0.2778
+effusion_remove_generic_skip0.2,effusion,remove,No acute cardiopulmonary process,0.2,00020018_002.png,20018,0.1252,0.2458,,,0,False,False,True,False,0.0682,0.1787,-0.0675
+effusion_remove_generic_skip0.2,effusion,remove,No acute cardiopulmonary process,0.2,00016474_001.png,16474,0.843,0.5241,,,0,False,False,True,False,0.4614,0.603,0.049
+effusion_remove_generic_skip0.2,effusion,remove,No acute cardiopulmonary process,0.2,00011757_005.png,11757,0.5393,0.1963,,,0,False,False,True,False,0.2648,0.3995,0.0426
+effusion_remove_generic_skip0.2,effusion,remove,No acute cardiopulmonary process,0.2,00028821_000.png,28821,0.9142,0.9165,,,0,False,False,True,False,0.8288,0.7811,-0.0356
+effusion_remove_generic_skip0.2,effusion,remove,No acute cardiopulmonary process,0.2,00007034_006.png,7034,0.6892,0.5913,,,0,False,False,True,False,0.7706,0.31,0.0164
+effusion_remove_generic_skip0.2,effusion,remove,No acute cardiopulmonary process,0.2,00015266_000.png,15266,0.9947,0.457,,,0,False,False,True,False,0.8989,0.8365,0.0426
+effusion_remove_generic_skip0.2,effusion,remove,No acute cardiopulmonary process,0.2,00012659_040.png,12659,0.3586,0.1386,,,0,True,False,True,False,0.075,0.0469,-0.1688
+effusion_remove_generic_skip0.2,effusion,remove,No acute cardiopulmonary process,0.2,00004541_002.png,4541,0.5064,0.6269,,,0,False,False,True,False,0.6953,0.5848,-0.2293
+effusion_remove_specific_skip0.3,effusion,remove,No pleural effusion,0.3,00021840_000.png,21840,0.9952,0.9486,,,0,False,False,True,False,0.8953,0.7524,0.029
+effusion_remove_specific_skip0.3,effusion,remove,No pleural effusion,0.3,00029514_007.png,29514,0.564,0.8764,,,0,False,False,True,False,0.7917,0.7981,-0.0189
+effusion_remove_specific_skip0.3,effusion,remove,No pleural effusion,0.3,00020018_002.png,20018,0.1252,0.5296,,,0,False,False,True,False,0.0682,0.2435,-0.0723
+effusion_remove_specific_skip0.3,effusion,remove,No pleural effusion,0.3,00016474_001.png,16474,0.843,0.942,,,0,False,False,True,False,0.4614,0.6668,0.0739
+effusion_remove_specific_skip0.3,effusion,remove,No pleural effusion,0.3,00011757_005.png,11757,0.5393,0.6762,,,0,False,False,True,False,0.2648,0.5328,0.0301
+effusion_remove_specific_skip0.3,effusion,remove,No pleural effusion,0.3,00028821_000.png,28821,0.9142,0.8346,,,0,False,False,True,False,0.8288,0.8491,0.0092
+effusion_remove_specific_skip0.3,effusion,remove,No pleural effusion,0.3,00007034_006.png,7034,0.6892,0.7264,,,0,False,False,True,False,0.7706,0.7356,-0.0312
+effusion_remove_specific_skip0.3,effusion,remove,No pleural effusion,0.3,00015266_000.png,15266,0.9947,0.58,,,0,False,True,True,False,0.8989,0.727,0.1139
+effusion_remove_specific_skip0.3,effusion,remove,No pleural effusion,0.3,00012659_040.png,12659,0.3586,0.5523,,,0,False,False,True,False,0.075,0.1043,-0.034
+effusion_remove_specific_skip0.3,effusion,remove,No pleural effusion,0.3,00004541_002.png,4541,0.5064,0.5103,,,0,False,False,True,False,0.6953,0.7448,0.0451
+effusion_remove_specific_skip0.2,effusion,remove,No pleural effusion,0.2,00021840_000.png,21840,0.9952,0.9334,,,0,False,False,True,False,0.8953,0.7194,0.0224
+effusion_remove_specific_skip0.2,effusion,remove,No pleural effusion,0.2,00029514_007.png,29514,0.564,0.9473,,,0,False,False,True,False,0.7917,0.793,-0.0101
+effusion_remove_specific_skip0.2,effusion,remove,No pleural effusion,0.2,00020018_002.png,20018,0.1252,0.5254,,,0,False,False,True,False,0.0682,0.2212,-0.0614
+effusion_remove_specific_skip0.2,effusion,remove,No pleural effusion,0.2,00016474_001.png,16474,0.843,0.9575,,,0,False,False,True,False,0.4614,0.6058,0.0748
+effusion_remove_specific_skip0.2,effusion,remove,No pleural effusion,0.2,00011757_005.png,11757,0.5393,0.665,,,0,False,False,True,False,0.2648,0.5356,0.0323
+effusion_remove_specific_skip0.2,effusion,remove,No pleural effusion,0.2,00028821_000.png,28821,0.9142,0.8204,,,0,False,False,True,False,0.8288,0.8492,0.0113
+effusion_remove_specific_skip0.2,effusion,remove,No pleural effusion,0.2,00007034_006.png,7034,0.6892,0.7288,,,0,False,False,True,False,0.7706,0.7219,-0.0305
+effusion_remove_specific_skip0.2,effusion,remove,No pleural effusion,0.2,00015266_000.png,15266,0.9947,0.5957,,,0,False,True,True,False,0.8989,0.7329,0.1117
+effusion_remove_specific_skip0.2,effusion,remove,No pleural effusion,0.2,00012659_040.png,12659,0.3586,0.548,,,0,False,False,True,False,0.075,0.1072,-0.0313
+effusion_remove_specific_skip0.2,effusion,remove,No pleural effusion,0.2,00004541_002.png,4541,0.5064,0.506,,,0,False,False,True,False,0.6953,0.7488,0.0446

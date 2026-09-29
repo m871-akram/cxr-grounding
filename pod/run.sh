@@ -10,12 +10,13 @@ cmd=$2
 log=/workspace/logs/$name.log
 # terminate: when the command ends (success or not), the pod removes itself, so a long run never
 # leaves a GPU idle. RunPod gives the pod id and key to the container's first process, not to SSH
-# shells, so they are read from /proc/1/environ.
+# shells, so they are read from /proc/1/environ. The 2-minute wait leaves time to pull results/
+# (everything else stays on the network volume anyway).
 finish=""
 if [ "${3:-}" = terminate ]; then
-  finish="; export \$(tr '\\0' '\\n' < /proc/1/environ | grep -E '^RUNPOD_(POD_ID|API_KEY)='); \
+  finish="; sleep 120; export \$(tr '\\0' '\\n' < /proc/1/environ | grep -E '^RUNPOD_(POD_ID|API_KEY)='); \
 echo \"== removing pod \$RUNPOD_POD_ID\" >> $log; \
-runpodctl pod remove \$RUNPOD_POD_ID >> $log 2>&1 || runpodctl remove pod \$RUNPOD_POD_ID >> $log 2>&1"
+runpodctl remove pod \$RUNPOD_POD_ID >> $log 2>&1 || runpodctl pod remove \$RUNPOD_POD_ID >> $log 2>&1"
 fi
 
 if tmux has-session -t "=$name" 2>/dev/null; then

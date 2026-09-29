@@ -1,0 +1,5 @@
+finding,phrasing,question,threshold,auroc_val
+cardiomegaly,0,Is there cardiomegaly in this image?,0.9903,0.942
+cardiomegaly,1,Is the heart enlarged in this image?,0.5624,0.9269
+effusion,0,Is there pleural effusion in this image?,0.0954,0.8872
+effusion,1,Is there fluid in the pleural space in this image?,0.2452,0.8832

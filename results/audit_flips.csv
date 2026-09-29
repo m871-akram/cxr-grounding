@@ -1,0 +1,23 @@
+model,finding,phrasing,subset,threshold,n_eligible,flip_edit,ci_low,ci_high,flip_sham
+1.5-4b,cardiomegaly,0,all,Youden,270,1.0,1.0,1.0,0.222
+1.5-4b,cardiomegaly,0,all,0.5,217,1.0,1.0,1.0,0.286
+1.5-4b,cardiomegaly,1,all,Youden,275,1.0,1.0,1.0,0.164
+1.5-4b,cardiomegaly,1,all,0.5,272,1.0,1.0,1.0,0.173
+1.5-4b,effusion,0,all,Youden,146,1.0,1.0,1.0,0.11
+1.5-4b,effusion,0,all,0.5,154,1.0,1.0,1.0,0.078
+1.5-4b,effusion,1,all,Youden,148,1.0,1.0,1.0,0.122
+1.5-4b,effusion,1,all,0.5,150,1.0,1.0,1.0,0.06
+4b,cardiomegaly,0,all,Youden,263,1.0,1.0,1.0,0.236
+4b,cardiomegaly,0,all,0.5,264,1.0,1.0,1.0,0.22
+4b,cardiomegaly,0,yes/no answers only,Youden,220,1.0,1.0,1.0,0.214
+4b,cardiomegaly,0,yes/no answers only,0.5,220,1.0,1.0,1.0,0.214
+4b,cardiomegaly,1,all,Youden,273,1.0,1.0,1.0,0.19
+4b,cardiomegaly,1,all,0.5,293,0.99,0.976,1.0,0.092
+4b,cardiomegaly,1,yes/no answers only,Youden,226,1.0,1.0,1.0,0.173
+4b,cardiomegaly,1,yes/no answers only,0.5,238,0.996,0.987,1.0,0.088
+4b,effusion,0,all,0.5,166,0.994,0.982,1.0,0.018
+4b,effusion,0,yes/no answers only,0.5,161,0.994,0.981,1.0,0.019
+4b,effusion,1,all,Youden,143,1.0,1.0,1.0,0.126
+4b,effusion,1,all,0.5,160,1.0,1.0,1.0,0.05
+4b,effusion,1,yes/no answers only,Youden,135,1.0,1.0,1.0,0.126
+4b,effusion,1,yes/no answers only,0.5,148,1.0,1.0,1.0,0.034

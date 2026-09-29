@@ -157,6 +157,32 @@ removing or hiding the finding; ours adds it, so the comparison is indirect.
 - RadEdit removals flip 10-34% of MedGemma-4B's correct answers while background edits leave them
   unchanged (Xiong et al., three datasets, direct mode; shares computed from their Table 3).
 
+**Checks after the first audit, before day 4 (2026-09-29).** The first test audit gave a flip
+rate of 1.0 for valid additions and 11-24% sham flips, so GPU work pauses for:
+- sham breakdown: sham flip rate split by whether the sham passes the addition checks, and each
+  sham's P(yes) against its measured CTR or lung-base change (real anatomical change, or editing
+  traces?);
+- four groups (real normal, sham, valid addition, real with the finding): MedGemma's P(yes), the
+  classifier's score and the measured CTR; a reliability plot for 4B (near-zero thresholds);
+- leak check: the code path of originals and edits (file format, resize), and a few pairs
+  re-scored to confirm the scores are deterministic;
+- cardiomegaly dose-response: ~100 test normal films, the add mask at 6 strengths from 0% (the
+  heart's own outline) to the current +30%, every edit scored by both MedGemma models and the
+  classifier whatever its validity; all real PA test films scored with their CTR. Output: P(yes)
+  against measured CTR for real and edited films with a logistic fit; the switch point is the CTR
+  where the fit crosses P(yes) = 0.5, with a patient bootstrap 95% CI.
+
+**Day-4 decision rule, fixed on 2026-09-29 before these results.** Checked in this order:
+1. If shams that fail the addition checks still flip (primary rule, 95% CI lower bound above 5%,
+   for both phrasings of at least one model and finding): LoRA to remove the sensitivity to
+   editing traces, trained on additions = "yes", shams and originals = "no". Success: sham flips
+   go down, addition flips stay, VQA-RAD accuracy unchanged.
+2. Else, if a model's cardiomegaly switch point on the edited films is clearly away from CTR 0.5
+   (its 95% CI does not overlap 0.47-0.53): LoRA to align it with the clinical rule, using graded
+   edits labelled by their measured CTR.
+3. Else, no LoRA: day 4 becomes the effusion dose-response and the write-up, and the result is
+   that MedGemma tracks the anatomy.
+
 **Day 4, the fix.** Output: before / after table.
 - [ ] `cxr/lora.py`: LoRA on training pairs (patient split), bf16, checkpoints; VQA-RAD training
       samples mixed in to limit forgetting.
@@ -347,3 +373,24 @@ removed itself as intended (under $0.01), so long runs can end their own pod (`p
 <name> "<command>" terminate`). Session: A100 for 43 min, about $1.14,
 including about 19 min idle after the run ended (the pod was not terminated in the turn that
 received the end of the run).
+
+**2026-09-29, test pairs and the first audit (RTX PRO 6000).** Generation on 380 cardiomegaly and
+600 effusion test normal films (`results/pairs_test_summary.csv`): 308 valid cardiomegaly
+additions (81%) and 179 valid effusion additions (30%, below the 250 aimed for, reported as is);
+4.7% and 0.2% of shams pass the checks. The first full audit failed on "Too many open files"
+(lazy `Image.open`), fixed by loading each image. Audit of both models (`results/audit_flips.csv`,
+`audit_controls.csv`, `audit_log_odds.csv`): every eligible valid addition flips under the Youden
+rule (n = 143-275 per model, finding and phrasing), and 99-100% under the 0.5 rule; the mean
+change in log-odds is +14 to +25. Sham flips: 11-24% (Youden), 2-29% (0.5). MedGemma 4B's Youden
+thresholds are near zero (0.0000-0.133), and its "yes" rate on blank films is 67% for "Is the
+heart enlarged" and 100% for both effusion phrasings (100% on shuffled films for the first):
+text priors dominate there. Reliability (`results/audit_reliability.png`): 44-64% of 4B's P(yes)
+are below 0.01, yet 6-26% of those films have the finding. Sham breakdown
+(`results/audit_sham_breakdown.csv`, `audit_sham_vs_anatomy.png`): shams that fail the checks
+flip at 11-17%, CI lower bounds 8-13%, so step 1 of the day-4 rule applies as written. But
+cardiomegaly sham flips follow the CTR change (4-8% at no change, 64-86% above +0.06), and shams
+with no measured change flip at 1.1-6.2% with a mean log-odds change of about 0. Effusion sham
+flips do not follow the lung-area change, and shams with no measured change still flip at
+7.7-8.5% with a log-odds change of +0.38 to +0.51 (CI above 0): an editing trace, or a change the
+lung-area check misses. Session: RTX PRO 6000 for 35 min (17:50-18:25 UTC), about $1.21; the pod
+was deleted by hand. Generation earlier: about $4.

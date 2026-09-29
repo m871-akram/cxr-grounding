@@ -1,0 +1,11 @@
+config,n,classifiers_ok,anatomy_ok,outside_ok,valid
+cardiomegaly_remove_generic_skip0.3,10,0.3,0.4,1.0,0.3
+cardiomegaly_remove_generic_skip0.2,10,0.2,0.3,1.0,0.2
+cardiomegaly_remove_specific_skip0.3,10,0.0,0.1,1.0,0.0
+cardiomegaly_remove_specific_skip0.2,10,0.0,0.2,1.0,0.0
+cardiomegaly_remove_band_skip0.3,10,0.1,0.3,1.0,0.1
+cardiomegaly_remove_band_skip0.2,10,0.1,0.3,1.0,0.1
+effusion_remove_generic_skip0.3,10,0.1,0.0,1.0,0.0
+effusion_remove_generic_skip0.2,10,0.2,0.0,1.0,0.0
+effusion_remove_specific_skip0.3,10,0.0,0.1,1.0,0.0
+effusion_remove_specific_skip0.2,10,0.0,0.1,1.0,0.0

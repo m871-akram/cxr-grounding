@@ -1,0 +1,17 @@
+model,finding,phrasing,variant,mean_change_log_odds,ci_low,ci_high
+1.5-4b,cardiomegaly,0,edit,14.053,13.506,14.542
+1.5-4b,cardiomegaly,0,sham,2.081,1.393,2.684
+1.5-4b,cardiomegaly,1,edit,15.598,15.208,15.921
+1.5-4b,cardiomegaly,1,sham,1.248,0.696,1.735
+1.5-4b,effusion,0,edit,16.03,15.347,16.647
+1.5-4b,effusion,0,sham,0.493,0.033,0.928
+1.5-4b,effusion,1,edit,15.123,14.407,15.794
+1.5-4b,effusion,1,sham,0.62,0.246,1.026
+4b,cardiomegaly,0,edit,20.079,19.313,20.725
+4b,cardiomegaly,0,sham,2.705,1.728,3.559
+4b,cardiomegaly,1,edit,22.6,22.101,23.027
+4b,cardiomegaly,1,sham,1.718,0.935,2.428
+4b,effusion,0,edit,24.509,23.578,25.351
+4b,effusion,0,sham,0.208,-0.389,0.816
+4b,effusion,1,edit,21.729,20.749,22.648
+4b,effusion,1,sham,0.756,0.181,1.395
