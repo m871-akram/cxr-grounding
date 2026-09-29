@@ -1,0 +1,41 @@
+image,patient_id,finding,direction,prompt,seed,change_in_edit,change_in_keep
+00006580_000.png,6580,cardiomegaly,remove,No acute cardiopulmonary process,0,21.66,2.39
+00015520_000.png,15520,cardiomegaly,remove,No acute cardiopulmonary process,1,6.5,2.98
+00000096_000.png,96,cardiomegaly,remove,No acute cardiopulmonary process,2,22.49,2.49
+00016315_000.png,16315,cardiomegaly,remove,No acute cardiopulmonary process,3,17.89,2.49
+00023158_000.png,23158,cardiomegaly,remove,No acute cardiopulmonary process,4,6.04,2.64
+00012868_000.png,12868,cardiomegaly,remove,No acute cardiopulmonary process,5,9.77,2.44
+00002743_006.png,2743,cardiomegaly,remove,No acute cardiopulmonary process,6,9.43,2.48
+00028946_000.png,28946,cardiomegaly,remove,No acute cardiopulmonary process,7,39.13,2.47
+00014544_000.png,14544,cardiomegaly,remove,No acute cardiopulmonary process,8,11.84,2.73
+00012686_003.png,12686,cardiomegaly,remove,No acute cardiopulmonary process,9,13.65,2.78
+00023696_003.png,23696,cardiomegaly,add,Cardiomegaly.,0,32.28,2.74
+00012976_001.png,12976,cardiomegaly,add,Cardiomegaly.,1,36.14,2.7
+00006958_002.png,6958,cardiomegaly,add,Cardiomegaly.,2,16.4,2.2
+00009158_000.png,9158,cardiomegaly,add,Cardiomegaly.,3,23.21,2.55
+00021221_000.png,21221,cardiomegaly,add,Cardiomegaly.,4,17.47,2.82
+00002070_004.png,2070,cardiomegaly,add,Cardiomegaly.,5,21.71,2.58
+00012031_000.png,12031,cardiomegaly,add,Cardiomegaly.,6,36.09,2.84
+00020654_004.png,20654,cardiomegaly,add,Cardiomegaly.,7,31.44,2.84
+00023904_000.png,23904,cardiomegaly,add,Cardiomegaly.,8,24.45,2.64
+00023467_000.png,23467,cardiomegaly,add,Cardiomegaly.,9,21.19,2.48
+00017313_005.png,17313,effusion,remove,No acute cardiopulmonary process,0,37.87,2.85
+00009275_000.png,9275,effusion,remove,No acute cardiopulmonary process,1,32.27,2.51
+00019003_001.png,19003,effusion,remove,No acute cardiopulmonary process,2,31.71,2.6
+00011630_003.png,11630,effusion,remove,No acute cardiopulmonary process,3,28.71,2.38
+00016693_000.png,16693,effusion,remove,No acute cardiopulmonary process,4,38.91,2.46
+00022169_002.png,22169,effusion,remove,No acute cardiopulmonary process,5,20.84,2.52
+00013243_002.png,13243,effusion,remove,No acute cardiopulmonary process,6,20.76,2.52
+00027548_000.png,27548,effusion,remove,No acute cardiopulmonary process,7,22.25,2.44
+00007009_005.png,7009,effusion,remove,No acute cardiopulmonary process,8,14.14,2.36
+00015266_000.png,15266,effusion,remove,No acute cardiopulmonary process,9,39.57,2.3
+00023696_003.png,23696,effusion,add,Effusion.,0,31.33,2.65
+00012976_001.png,12976,effusion,add,Effusion.,1,56.84,2.6
+00006958_002.png,6958,effusion,add,Effusion.,2,34.93,2.12
+00009158_000.png,9158,effusion,add,Effusion.,3,28.54,2.35
+00021221_000.png,21221,effusion,add,Effusion.,4,20.84,2.72
+00002070_004.png,2070,effusion,add,Effusion.,5,34.18,2.38
+00012031_000.png,12031,effusion,add,Effusion.,6,60.96,2.78
+00020654_004.png,20654,effusion,add,Effusion.,7,23.24,2.69
+00023904_000.png,23904,effusion,add,Effusion.,8,41.69,2.46
+00023467_000.png,23467,effusion,add,Effusion.,9,31.99,2.37

@@ -12,14 +12,14 @@ case "${1:-}" in
     # rsync must exist on both ends, and apt packages do not survive a new pod.
     ssh cxr-pod 'command -v rsync >/dev/null || (apt-get update -qq && apt-get install -y -qq rsync >/dev/null)'
     # --delete mirrors deleted code files; excluded folders on the pod are never touched.
-    rsync -az --delete \
+    rsync -rlptz --delete \
       --exclude=.git/ --exclude=/data/ --exclude=/outputs/ --exclude=/results/ --exclude=/logs/ \
       --exclude=.venv/ --exclude=__pycache__/ --exclude=.ipynb_checkpoints/ --exclude=.DS_Store \
-      --exclude='CLAUDE*.md' \
+      --exclude='CLAUDE*.md' --exclude=/papers/ \
       ./ "$REMOTE/"
     ;;
   pull)
-    rsync -az "$REMOTE/results/" results/
+    rsync -rltz "$REMOTE/results/" results/  # no -p: local files keep normal permissions
     ;;
   *)
     echo "usage: bash pod/sync.sh push|pull" >&2

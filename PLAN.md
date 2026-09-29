@@ -60,17 +60,33 @@ RunPod plugin for Claude Code; Hugging Face terms accepted for RadEdit and MedGe
 approval), read token created.
 
 **Day 1, data and first tries.** Output: go / no-go per finding.
-- [ ] Replace `slurm/` (old cluster) with a RunPod setup: `pod/setup.sh` creates the environment
+- [x] Replace `slurm/` (old cluster) with a RunPod setup: `pod/setup.sh` creates the environment
       and the Hugging Face cache on the network volume; update the README "Run it" section.
-- [ ] Create the pod (L4 24 GB in EUR-IS-1, public IP, 50 GB network volume at `/workspace`), run the data
+- [x] Create the pod (A100 80 GB in EUR-IS-1, public IP, 50 GB network volume at `/workspace`), run the data
       stage: `chexmask`, `ctr`, `prepare` on the 12 image zips. Check the CTR numbers against
       `results/ctr_summary.csv`.
-- [ ] RadEdit smoke test: 10 films per finding, remove and add, saved as a gallery.
-- [ ] MedGemma smoke test: P(yes) on ~200 real PA films per finding; AUROC against the labels.
-- [ ] Decide which findings go forward: convincing edits and MedGemma AUROC clearly above 0.5.
-- [ ] `notebooks/01_data.ipynb`: labels, views, images per patient, the CTR physiology check.
+- [x] RadEdit smoke test: 10 films per finding, remove and add, saved as a gallery.
+- [x] MedGemma smoke test: P(yes) on ~200 real PA films per finding; AUROC against the labels.
+- [x] Decide which findings go forward: convincing edits and MedGemma AUROC clearly above 0.5.
+      Decision: MedGemma passes both; both findings stay, conditional on the day-2 RadEdit tuning
+      round. A finding is kept if at least half of its edits pass the three checks and its
+      galleries look plausible; if neither does, only the better one is kept.
+- [x] `notebooks/01_data.ipynb`: labels, views, images per patient, the CTR physiology check.
 
 **Day 2, counterfactual pairs.** Output: verified pairs + gallery.
+- [ ] RadEdit tuning round first, on validation films (at most ~2 h of work and ~30 min of A100):
+  - cardiomegaly add mask shaped like real enlargement: mainly sideways (more on the image's
+    right) and downward, not upward; two sizes;
+  - effusion mask with a curved upper edge, higher on the outer side, instead of the flat cut;
+  - removal masks that cover the whole finding;
+  - guidance 15 (paper) and skip ratio 0.5; the released pipeline already uses DDPM
+    (edit-friendly) inversion, which the paper found better than DDIM at the lung border;
+  - finding-specific prompts ("Cardiomegaly", "Normal heart size", "No pleural effusion")
+    against the generic "No acute cardiopulmonary process";
+  - original pixels pasted back outside the edit mask with a feathered edge of a few pixels, for
+    edits and sham edits alike.
+- [ ] Edit-check classifier: not trained on NIH (RadEdit was); the TorchXRayVision model is chosen
+      after the other session's check.
 - [ ] `cxr/edit.py`: remove / add / sham edits for ~400 source films per finding (test-split
       patients for the audit, train-split patients for LoRA); resumable.
 - [ ] The three checks (section 2); segmenter CTR vs CheXmask CTR on real films first.
@@ -80,6 +96,22 @@ approval), read token created.
 - [ ] `cxr/audit.py`: MedGemma in bf16, two phrasings per question, on original, edited, sham,
       blank, shuffled and other-patient images.
 - [ ] `notebooks/03_audit.ipynb`: the analyses of section 5.
+
+**Flip rule, fixed on 2026-09-29 before any audit result.**
+- Threshold: for each finding and phrasing, the P(yes) that best separates validation originals
+  with the finding from normal ones (Youden's J). It is computed once, on validation films only,
+  and applied unchanged to the test pairs.
+- Primary: a pair flips when the original and the edited P(yes) fall on opposite sides of that
+  threshold, in the direction of the edit (remove: from above to below; add: from below to above).
+  Flip rate = flips / valid pairs whose original answer is on the finding's side of the threshold;
+  pairs already on the target side are counted and reported separately.
+- Secondary: the same with the threshold at 0.5, and the change in log-odds,
+  logit P(yes | edited) - logit P(yes | original).
+- Sham edits are scored with the same rules; they should not flip.
+- Every rate is reported twice: on all pairs, and without the pairs where either answer does not
+  start with yes/no (yes/no probability mass below 0.5 at the first answer token).
+- Originals and edits reach MedGemma through the same path (512-px PNG, resized to 896 px by the
+  processor), so resolution is not a cue.
 
 **Day 4, the fix.** Output: before / after table.
 - [ ] `cxr/lora.py`: LoRA on training pairs (patient split), bf16, checkpoints; VQA-RAD training
@@ -116,7 +148,8 @@ Notebooks run on the Mac and read only the small tables in `results/`; heavy wor
 | Where | Role |
 |---|---|
 | Mac (M1) | Claude Code, git, notebooks on `results/`, figures, writing |
-| RunPod pod: L4 24 GB in EUR-IS-1 ($0.49/h) | Data prep, RadEdit, MedGemma audit and LoRA (bf16) |
+| RunPod pod: A100 80 GB in EUR-IS-1 ($1.59/h) | RadEdit, MedGemma audit and LoRA (bf16, larger batches where they help) |
+| RunPod CPU pod in EUR-IS-1 (from $0.07/h) | GPU-free steps: data prep |
 | RunPod network volume, 50 GB at `/workspace` (~$3.50/month) | Environment, data (~2 GB), Hugging Face cache (~15 GB), outputs |
 | GitHub | Code and `results/` (small files only) |
 
@@ -153,7 +186,7 @@ Rules:
 | RadEdit edits unconvincing for a finding | Drop that finding; one well-verified finding is enough |
 | MedGemma cannot detect a finding at all (AUROC near 0.5) | Drop it: grounding is meaningless if the model never sees the finding |
 | Pretrained segmenter disagrees with CheXmask | Train a U-Net on CheXmask masks (~1-2 GPU-hours) |
-| L4 unavailable, or a step needs more memory or speed | A100 80 GB in EUR-IS-1 ($1.59/h), after asking |
+| A100 unavailable in EUR-IS-1 | L4 24 GB ($0.49/h) if the step fits; moving the volume to another data center only after asking |
 | Forgotten pod | Stop rule above; prepaid balance as hard cap |
 | Fine-tuning does not help | The audit alone (days 1-3) is a complete result |
 | Sprint runs late | Cut in this order: second finding, VQA-RAD mixing, day-5 write-up length |
@@ -178,3 +211,50 @@ is kept; the CTR step ran and produced `results/ctr_by_view.png`.
 
 **2026-09-28, decision.** Moved to RunPod (no quota or time limit, ~$0.49/h for an A40) and a
 five-day sprint (section 4). Everything was removed from the old cluster; code is on GitHub.
+
+**2026-09-29, day 1 on RunPod.** The account had no SSH key registered (a dedicated one was
+added), and creating a network volume needs a balance of at least $5. GPU stock was the real
+problem: A40, A6000, L40, L40S and RTX 6000 Ada were out of stock in Secure Cloud, and the RTX PRO
+4500 listed the night before was gone. With a network volume and a public SSH port, every request
+was refused ("no instances available"): L4, RTX 2000/4000 Ada and A100 SXM in EUR-IS-1, A100 PCIe
+in CA-MTL-3, and CPU pods of 4 or 8 vCPU. Volume only, SSH only, and both together all worked on a
+2-vCPU CPU pod, so this was capacity, not a request error; the per-GPU and per-data-center stock
+lists often disagree, and only a create call settles it.
+Decision: the A100 80 GB in EUR-IS-1 is the sprint GPU (bf16); GPU-free steps (data prep,
+downloads) run on a small CPU pod; a pod is terminated after 15 idle minutes.
+Stage 1 ran on a 2-vCPU CPU pod ($0.07/h): `pod/setup.sh` 5 min on the new volume, `pod/data.sh`
+22 min. CheXmask matched PhysioNet's SHA-256. `results/ctr_summary.csv` and
+`results/ctr_by_view.png` came out byte-identical to the cluster run, so the Hugging Face mirror's
+labels (`Data_Entry_2017_v2020.csv`) give the same result as Kaggle's; all 18,360 selected PA films
+were converted. Libraries: transformers 5.17 still loads BioViL-T (RadEdit's text encoder, custom
+code); diffusers 0.40 needs `trust_remote_code=True` to load RadEdit's custom pipeline.
+
+**2026-09-29, smoke tests on the A100.** MedGemma, first answer token, no system message, 100 val
+films with the finding vs 100 normal films (`results/medgemma_smoke.csv`): AUROC 0.930 for
+cardiomegaly with both phrasings, 0.890 and 0.884 for effusion, all CI lower bounds above 0.82. The
+yes/no tokens do not always carry the first-token probability (lowest mass 0.084), so answers that
+start with another word need a robustness check on day 3. RadEdit with the model-card settings
+(100 steps, guidance 7.5, skip ratio 0.3; `results/radedit_smoke*.{csv,jpg}`): the change stays
+inside the edit mask (mean 2.5-2.6 gray levels in the keep region), but additions fill the mask
+(added hearts take the dilated-mask shape; added effusions have the flat top of the lower-half
+cut) and removals are weaker; one cardiomegaly removal painted a saturated white block. RadEdit's
+released pipeline has two quirks: outside the edit mask it pastes back the inverted latent of the
+previous step, one step too noisy (harmless at 100 steps, garbage at 4), and a second
+`if keep_mask is not None` block overwrites everything outside the edit mask, so the keep mask
+(and our free band) has no effect. Session cost: CPU pod 51 min ($0.06), A100 18 min ($0.48).
+
+**2026-09-29, RadEdit bug check and data notebook.** `python -m cxr.edit bugcheck` (CPU pod, one
+val film; `results/radedit_bugcheck.csv`) shows both quirks with RadEdit's own public call.
+(1) With an empty prompt and guidance 1, RadEdit only reconstructs the film, so pasting the film
+back outside the edit mask should change nothing. Instead, far from the mask border, the result
+differs from the plain reconstruction by 41.8, 17.2 and 7.8 gray levels at 4, 8 and 16 steps: the
+leftover noise of the one-step lag, shrinking with the step size. (2) keep = 1 - edit and an empty
+keep mask give identical edits (difference 0.000), while no keep mask gives a different one
+(8.3 outside the mask): the content of the keep mask is ignored. Pasting the original pixels back
+outside the edit mask after decoding (day-2 plan) removes both effects from the film outside the
+mask. `notebooks/01_data.ipynb` recomputes the CTR check from the per-image table and adds patient
+bootstrap CIs: AUROC 0.914 (95% CI 0.908-0.921) on PA films, 0.795 (0.778-0.811) on AP films
+(`results/ctr_auroc_ci.csv`). The network used early this afternoon blocked outbound high ports,
+so direct SSH to the pods (random high port) failed until another network was used. The pod's
+`results/` still holds the smoke-test PNG galleries (JPEG in git): delete them on the next pod,
+or `pod/sync.sh pull` brings them back. Session cost: CPU pods 32 min, about $0.04.

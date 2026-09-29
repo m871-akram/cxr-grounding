@@ -1,0 +1,6 @@
+check,steps,mean_abs_diff_outside,mean_abs_diff_inside
+1: paste-back vs plain reconstruction,4,41.808,15.732
+1: paste-back vs plain reconstruction,8,17.171,14.279
+1: paste-back vs plain reconstruction,16,7.846,5.352
+2: keep = 1 - edit vs empty keep,16,0.0,0.0
+2: empty keep vs no keep,16,8.259,14.666
