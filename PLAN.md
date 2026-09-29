@@ -5,16 +5,19 @@ vision-language model actually uses the image.
 
 ## 1. Question and hypotheses
 
-**Question.** If a finding is removed from (or added to) a chest X-ray by a *minimal* diffusion edit,
-does MedGemma's answer change accordingly?
+**Question.** If a finding is added to a normal chest X-ray by a *minimal*, validated diffusion
+edit, does MedGemma's answer change accordingly?
 
 **Why it is new.** Grounding tests of medical VLMs use blank, shuffled, other-patient or occluded
 images (CORAL arXiv 2607.03647; Lotfinia et al. arXiv 2606.17710), or score hallucinations on
 unmodified images (HalluCXR arXiv 2605.20469). One 2026 paper uses same-patient RadEdit removals
-on MedGemma, but only to filter samples for an attribution benchmark, with unvalidated edits and
-removal only (Xiong et al., arXiv 2605.20158). This project makes the same-patient counterfactual
-the measurement: validated edits in both directions, same-mask sham edits, patient-level CIs, and
-LoRA training on the pairs.
+on MedGemma, but only to filter samples for an attribution benchmark, with unvalidated edits
+(Xiong et al., arXiv 2605.20158). This project makes the same-patient counterfactual the
+measurement: a finding is added to normal films by edits that an independent classifier and an
+anatomical check must both confirm, with same-mask sham edits, patient-level CIs, and LoRA
+training on the pairs. Removals were tried and failed these checks (lab notebook, 2026-09-29), so
+the audit tests additions only. Prior tests remove or hide the finding; this one adds it, so the
+two are complementary.
 
 - **H1.** On a large share of valid counterfactual pairs, MedGemma keeps the same answer
   (it answers from text priors, not from the image).
@@ -24,13 +27,14 @@ LoRA training on the pairs.
 ## 2. Pipeline
 
 1. **Data.** NIH ChestX-ray14, PA views, 512 px; heart/lung contours from CheXmask.
-2. **Counterfactuals.** RadEdit (`microsoft/radedit`): remove or add a finding inside an
-   anatomical mask (edit mask), keep everything else (keep mask). Masks are drawn from the
-   CheXmask landmarks: dilated heart for cardiomegaly, lower lung zones for effusion.
+2. **Counterfactuals.** RadEdit (`microsoft/radedit`): add a finding to a normal film inside an
+   anatomical mask drawn from the CheXmask landmarks (a heart enlarged toward the apex for
+   cardiomegaly, the lung bases under a curved edge for effusion); the original pixels are pasted
+   back outside the mask. Removals were tried on day 2 and failed the checks.
 3. **Validation of each edit.** A pair is kept only if all three checks pass:
    - an independent classifier (TorchXRayVision) moves in the right direction;
    - anatomy agrees: for cardiomegaly the CTR crosses 0.5 in the right direction (PA films only);
-     for effusion the lung area at the base shrinks (add) or grows (remove). Measured with the
+     for effusion the aerated lung area at the base shrinks by at least 10%. Measured with the
      pretrained TorchXRayVision segmenter, first checked against CheXmask on real films; train
      our own U-Net only if that check fails;
    - little change outside the edit mask (SSIM and mean absolute difference).
@@ -47,7 +51,7 @@ LoRA training on the pairs.
 | Edit realism | Blinded pilot reader study (after the sprint): 50 real + 50 edited images |
 | VLM accuracy | AUROC of P(yes) on original images |
 | Grounding | **Flip rate**: % of valid pairs where the answer changes the right way |
-| Artifact control | **Sham edits**: same mask and process, prompt that keeps the finding; answer should not move |
+| Artifact control | **Sham edits**: same mask and edit path, prompt that keeps the film normal; answer should not move |
 | Baselines | Blank image, pixel shuffle, other patient's image (as in the 2026 papers) |
 | Fix | Flip rate and sham rate on held-out patients; VQA-RAD accuracy before vs after |
 
@@ -88,6 +92,21 @@ approval), read token created.
     against the generic "No acute cardiopulmonary process";
   - original pixels pasted back outside the edit mask with a feathered edge of a few pixels, for
     edits and sham edits alike.
+- [x] Decisions after the first round (2026-09-29):
+  - additions go for both findings: cardiomegaly with the large mask, effusion with the
+    two-classifier filter;
+  - removals get one follow-up round on the same films: skip ratio 0.3 and 0.2, guidance 15, the
+    generic and the finding-specific prompt, plus, for cardiomegaly, an edit mask covering only the
+    band between the current heart border and a shrunk contour. A removal config is kept if at
+    least half of its edits pass the three checks. If none passes for a finding, that finding goes
+    on with additions only, and a reworded §1 (without "both directions") is proposed to Akram
+    before any change;
+  - the CTR check compares the original and the edited film with the same segmenter, so its
+    offset from CheXmask cancels;
+  - sham edits use exactly the same mask and edit path (`edit_film`) as the real edit, for every
+    source film; on day 4 they also go into the LoRA training data with the source film's answer
+    ("no" for the normal films of the additions);
+  - the full generation run starts only after Akram's go.
 - [ ] Edit-check classifiers, chosen first: AUROC on real NIH PA validation films for
       TorchXRayVision `densenet121-res224-pc` (PadChest) and `densenet121-res224-chex` (CheXpert).
       If both reach at least 0.80 for a finding, an edit must convince both; if only one does, it
@@ -95,8 +114,11 @@ approval), read token created.
       The one-classifier results are reported as a sensitivity check. No NIH-trained (`-nih`,
       `-all`) or MIMIC-trained models: RadEdit saw NIH, and MIMIC is in RadEdit's and MedGemma's
       training data.
-- [ ] `cxr/edit.py`: remove / add / sham edits for ~400 source films per finding (test-split
-      patients for the audit, train-split patients for LoRA); resumable.
+- [ ] `cxr/edit.py`: addition and sham edits (same mask and edit path) for every source film:
+      test-split films first, enough for at least 250 valid pairs per finding at the tuning pass
+      rates, then the day-3 audit on them, then train-split films for LoRA; resumable. Before
+      launching: number of edits, estimated time and cost. Any run longer than 30 min terminates
+      its own pod when it ends.
 - [ ] The three checks (section 2); segmenter CTR vs CheXmask CTR on real films first.
 - [ ] `notebooks/02_edits.ipynb`: pass rates, ΔCTR and Δp distributions, best and worst edits.
 
@@ -107,16 +129,17 @@ approval), read token created.
       with only the model id changed. First diff both models' `preprocessor_config.json` and
       `processor_config.json`; if they differ, decide before running. The LoRA fix (day 4)
       defaults to `medgemma-4b-it`; the choice is made after the audit.
-- [ ] `notebooks/03_audit.ipynb`: the analyses of section 5.
+- [ ] `notebooks/03_audit.ipynb`: the analyses of section 5, plus MedGemma's P(yes) across four
+      groups: real normal films, sham edits, valid additions, real films with the finding (how
+      close the edits come to real findings in the model's eyes).
 
 **Flip rule, fixed on 2026-09-29 before any audit result.**
 - Threshold: for each finding and phrasing, the P(yes) that best separates validation originals
   with the finding from normal ones (Youden's J). It is computed once, on validation films only,
   and applied unchanged to the test pairs.
-- Primary: a pair flips when the original and the edited P(yes) fall on opposite sides of that
-  threshold, in the direction of the edit (remove: from above to below; add: from below to above).
-  Flip rate = flips / valid pairs whose original answer is on the finding's side of the threshold;
-  pairs already on the target side are counted and reported separately.
+- Primary: a pair flips when the original P(yes) is below that threshold and the edited P(yes)
+  above it (the finding was added). Flip rate = flips / valid pairs whose original answer is
+  below the threshold (correct "no"); pairs already above it are counted and reported separately.
 - Secondary: the same with the threshold at 0.5; and the change in log-odds,
   logit P(yes | edited) - logit P(yes | original), reported for all valid pairs.
 - Sham edits are scored with the same rules; they should not flip.
@@ -126,7 +149,8 @@ approval), read token created.
   processor), so resolution is not a cue.
 
 **Numbers to compare with** (other models, data and interventions: context, not a head-to-head).
-Both papers report the share of correct answers that flip, as our primary rate does.
+Both papers report the share of correct answers that flip, as our primary rate does, but after
+removing or hiding the finding; ours adds it, so the comparison is indirect.
 - Occluding the finding flips 35.1% (95% CI 26.3-45.0, n = 97) of MedGemma-1.5-4B's correct
   cardiomegaly answers and 8.8% (3.0-23.0, n = 34) of its correct effusion answers (Lotfinia et
   al., MIMIC-CXR at 224 px).
@@ -309,3 +333,17 @@ now follow the anatomical masks (heart enlarged toward the apex, curved effusion
 barely change the film at skip ratio 0.5. MedGemma 1.5 and 4B processor configs: identical except
 `do_convert_rgb` (null vs true), which does not affect `cxr/audit.py` (films are converted to RGB
 before the processor). Session cost: RTX PRO 6000 for 9 min, about $0.31.
+
+**2026-09-29, removal follow-up (A100).** Same 10 val films per finding, guidance 15, skip ratio
+0.3 and 0.2 (`results/radedit_tuning_removals_summary.csv`, still on the volume: the pull failed on
+a network that blocks high ports). Share of valid edits: cardiomegaly 0.3 (generic prompt, skip
+0.3), 0.2 (generic, 0.2), 0.0 ("Normal heart size", both skips), 0.1 (band mask, both skips);
+effusion 0.0 for every config. No removal config reaches the bar set before the round (half of the
+edits), so both findings go on with additions only. Lower skip ratios and the band mask did not
+help: RadEdit adds density readily but could not clear it, for either finding. §1 was reworded
+to additions only; the removal galleries are pulled during the next pod session, for the write-up.
+A 2-vCPU test pod whose start command waits 60 s and then runs `runpodctl` on its own pod id
+removed itself as intended (under $0.01), so long runs can end their own pod (`pod/run.sh
+<name> "<command>" terminate`). Session: A100 for 43 min, about $1.14,
+including about 19 min idle after the run ended (the pod was not terminated in the turn that
+received the end of the run).

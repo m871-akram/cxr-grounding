@@ -2,8 +2,8 @@
 
     python -m cxr.edit smoke     # 10 val films per finding, remove and add -> results/radedit_smoke_*.jpg
     python -m cxr.edit bugcheck  # two quirks of RadEdit's released pipeline -> results/radedit_bugcheck.csv
-    python -m cxr.edit tune      # day-2 tuning round, scored by the three checks -> results/radedit_tuning*
-                                 # (run python -m cxr.checks validate first)
+    python -m cxr.edit tune [--round removals]  # day-2 tuning rounds, scored by the three checks
+                                 # -> results/radedit_tuning*  (run python -m cxr.checks validate first)
 
 RadEdit (microsoft/radedit; research-only weights, never redistributed) edits a 512-px chest X-ray
 following a text prompt, inside an edit mask, while the film is copied back inside a keep mask.
@@ -96,6 +96,22 @@ def grown_heart_mask(xy: np.ndarray, growth: float, size: int = 512) -> np.ndarr
     toward_apex = np.clip((heart[:, 0] - cx) / (heart[:, 0].max() - cx), 0, 1)  # 0 at the centre, 1 at the apex
     grown[below, 1] = cy + (grown[below, 1] - cy) * (1 + growth * toward_apex[below])  # smooth, apex moves most
     return polygon_mask(grown, size) | polygon_mask(heart, size)
+
+
+def heart_band_mask(xy: np.ndarray, shrink: float, size: int = 512) -> np.ndarray:
+    """For removing cardiomegaly: only the band between the current heart border and a heart shrunk
+    sideways (mostly on the apex side, the inverse of grown_heart_mask), i.e. the part that should
+    become lung. RadEdit fills whatever shape it is given. The heart is widened by 8 px (one latent
+    cell) so that its current border lies inside the band."""
+    from skimage.morphology import dilation, disk
+
+    heart = xy[HEART]
+    cx = heart[:, 0].mean()
+    shrunk = heart.copy()
+    right = shrunk[:, 0] > cx
+    shrunk[right, 0] = cx + (shrunk[right, 0] - cx) / (1 + 1.5 * shrink)
+    shrunk[~right, 0] = cx + (shrunk[~right, 0] - cx) / (1 + 0.5 * shrink)
+    return dilation(polygon_mask(heart, size), disk(8)) & ~polygon_mask(shrunk, size)
 
 
 def lung_bases_mask(xy: np.ndarray, medial: float, lateral: float, dilate_px: int,
@@ -290,66 +306,52 @@ def bugcheck(args: argparse.Namespace) -> None:
     print(table.to_string(index=False))
 
 
-TUNE_CONFIGS = [  # name, finding, direction, prompt, (mask kind, its parameters)
-    ("cardiomegaly_add_small", "cardiomegaly", "add", "Cardiomegaly", ("grown_heart", 0.15)),
-    ("cardiomegaly_add_large", "cardiomegaly", "add", "Cardiomegaly", ("grown_heart", 0.30)),
-    ("cardiomegaly_remove_generic", "cardiomegaly", "remove", NORMAL_PROMPT, ("heart", None)),
-    ("cardiomegaly_remove_specific", "cardiomegaly", "remove", "Normal heart size", ("heart", None)),
-    ("effusion_add", "effusion", "add", ADD_PROMPTS["effusion"], ("lung_bases", (0.75, 0.5, 10))),
-    ("effusion_remove_generic", "effusion", "remove", NORMAL_PROMPT, ("lung_bases", (0.55, 0.3, 20))),
-    ("effusion_remove_specific", "effusion", "remove", "No pleural effusion", ("lung_bases", (0.55, 0.3, 20))),
-]
+HEART_REMOVAL = ("heart", None)
+EFFUSION_REMOVAL = ("lung_bases", (0.55, 0.3, 20))
+TUNE_ROUNDS = {  # name, finding, direction, prompt, (mask kind, its parameters), skip ratio
+    "first": [
+        ("cardiomegaly_add_small", "cardiomegaly", "add", "Cardiomegaly", ("grown_heart", 0.15), 0.5),
+        ("cardiomegaly_add_large", "cardiomegaly", "add", "Cardiomegaly", ("grown_heart", 0.30), 0.5),
+        ("cardiomegaly_remove_generic", "cardiomegaly", "remove", NORMAL_PROMPT, HEART_REMOVAL, 0.5),
+        ("cardiomegaly_remove_specific", "cardiomegaly", "remove", "Normal heart size", HEART_REMOVAL, 0.5),
+        ("effusion_add", "effusion", "add", ADD_PROMPTS["effusion"], ("lung_bases", (0.75, 0.5, 10)), 0.5),
+        ("effusion_remove_generic", "effusion", "remove", NORMAL_PROMPT, EFFUSION_REMOVAL, 0.5),
+        ("effusion_remove_specific", "effusion", "remove", "No pleural effusion", EFFUSION_REMOVAL, 0.5),
+    ],
+    "removals": [  # follow-up: lower skip ratios leave RadEdit more room to erase a finding
+        ("cardiomegaly_remove_generic_skip0.3", "cardiomegaly", "remove", NORMAL_PROMPT, HEART_REMOVAL, 0.3),
+        ("cardiomegaly_remove_generic_skip0.2", "cardiomegaly", "remove", NORMAL_PROMPT, HEART_REMOVAL, 0.2),
+        ("cardiomegaly_remove_specific_skip0.3", "cardiomegaly", "remove", "Normal heart size", HEART_REMOVAL, 0.3),
+        ("cardiomegaly_remove_specific_skip0.2", "cardiomegaly", "remove", "Normal heart size", HEART_REMOVAL, 0.2),
+        ("cardiomegaly_remove_band_skip0.3", "cardiomegaly", "remove", NORMAL_PROMPT, ("heart_band", 0.30), 0.3),
+        ("cardiomegaly_remove_band_skip0.2", "cardiomegaly", "remove", NORMAL_PROMPT, ("heart_band", 0.30), 0.2),
+        ("effusion_remove_generic_skip0.3", "effusion", "remove", NORMAL_PROMPT, EFFUSION_REMOVAL, 0.3),
+        ("effusion_remove_generic_skip0.2", "effusion", "remove", NORMAL_PROMPT, EFFUSION_REMOVAL, 0.2),
+        ("effusion_remove_specific_skip0.3", "effusion", "remove", "No pleural effusion", EFFUSION_REMOVAL, 0.3),
+        ("effusion_remove_specific_skip0.2", "effusion", "remove", "No pleural effusion", EFFUSION_REMOVAL, 0.2),
+    ],
+}
 
 
 def tuning_mask(xy: np.ndarray, kind: str, param) -> np.ndarray:
     if kind == "grown_heart":
         return grown_heart_mask(xy, param)
+    if kind == "heart_band":
+        return heart_band_mask(xy, param)
     if kind == "heart":  # removal: the whole heart and a 25-px margin
         return edit_mask(xy, "cardiomegaly")
     return lung_bases_mask(xy, *param)  # removals use a higher edge and a wider margin
 
 
-def tune(args: argparse.Namespace) -> None:
-    """One tuning round on val films: every config edits the same n films of its finding and direction
-    (one per patient), then the three checks score every edit. For cardiomegaly the source films must
-    be able to cross CTR 0.5: normal films below it for additions, cardiomegaly films above it for removals."""
+def score_pairs(rows: list, used: dict, feather: float) -> tuple[list, list]:
+    """The three checks for every (original, edit) pair; results are added to each row.
+    Rows need: file (original), edit_file, mask, finding, direction. Returns the images."""
     from skimage.morphology import dilation, disk
 
-    from .checks import classify, ctr_of, load_classifiers, load_segmenter, segment, used_classifiers, val_films
-
-    used = used_classifiers()  # stops here if a finding has no validated classifier
-    torch.backends.cuda.matmul.allow_tf32 = True
-    films = load_films("val").merge(val_films()[["image", "ctr"]], on="image")
-    sources = {
-        ("cardiomegaly", "add"): films[(films["no_finding"] == 1) & (films["ctr"] < 0.5)],
-        ("cardiomegaly", "remove"): films[(films["cardiomegaly"] == 1) & (films["ctr"] > 0.5)],
-        ("effusion", "add"): films[films["no_finding"] == 1],
-        ("effusion", "remove"): films[films["effusion"] == 1],
-    }
-    sources = {k: v.drop_duplicates("patient_id").sample(n=args.n, random_state=args.seed) for k, v in sources.items()}
-
-    pipe, rows = None, []
-    for name, finding, direction, prompt, (kind, param) in TUNE_CONFIGS:
-        out_dir = OUTPUTS / "radedit_tuning" / name
-        out_dir.mkdir(parents=True, exist_ok=True)
-        for k, (_, film) in enumerate(sources[(finding, direction)].iterrows()):
-            mask = tuning_mask(landmarks_512(film), kind, param)
-            out = out_dir / film["image"]
-            if not out.exists():  # finished edits are skipped
-                if pipe is None:
-                    pipe = load_radedit()
-                original = Image.open(DATA / "nih512" / film["file"])
-                Image.fromarray(edit_film(pipe, original, mask, prompt, args.guidance, args.skip_ratio,
-                                          args.steps, args.seed + k, args.feather)).save(out)
-            rows.append({"config": name, "finding": finding, "direction": direction, "prompt": prompt,
-                         "image": film["image"], "patient_id": film["patient_id"], "file": film["file"],
-                         "mask": mask})
-    del pipe
-    torch.cuda.empty_cache()
+    from .checks import classify, ctr_of, load_classifiers, load_segmenter, segment
 
     originals = [np.asarray(Image.open(DATA / "nih512" / r["file"]).convert("L")) for r in rows]
-    edits = [np.asarray(Image.open(OUTPUTS / "radedit_tuning" / r["config"] / r["image"]).convert("L"))
-             for r in rows]
+    edits = [np.asarray(Image.open(r["edit_file"]).convert("L")) for r in rows]
     models = load_classifiers()
     p_before, p_after = classify(models, originals), classify(models, edits)
     seg = load_segmenter()
@@ -362,7 +364,8 @@ def tune(args: argparse.Namespace) -> None:
             before, after = p_before.loc[i, f"{name}:{finding}"], p_after.loc[i, f"{name}:{finding}"]
             r[f"p_before:{name}"], r[f"p_after:{name}"] = before, after
             classifiers_ok &= bool(sign * (after - threshold) > 0 and sign * (after - before) > 0)
-        # 2. anatomy: the CTR crosses 0.5, or the aerated lung inside the mask shrinks / grows by 10%
+        # 2. anatomy (same segmenter before and after): the CTR crosses 0.5, or the aerated lung
+        #    inside the mask shrinks / grows by 10%
         if finding == "cardiomegaly":
             ctr0, ctr1 = ctr_of(hearts0[i], lungs0[i]), ctr_of(hearts1[i], lungs1[i])
             r["ctr_before"], r["ctr_after"] = ctr0, ctr1
@@ -373,39 +376,148 @@ def tune(args: argparse.Namespace) -> None:
             r["lung_area_change"] = change
             anatomy_ok = bool(change <= -0.10) if sign > 0 else bool(change >= 0.10)
         # 3. nothing changed beyond the mask and its blended border
-        far = ~dilation(mask, disk(int(4 * args.feather) + 1))
+        far = ~dilation(mask, disk(int(4 * feather) + 1))
         r["max_change_outside"] = int(np.abs(edits[i].astype(int) - originals[i].astype(int))[far].max())
         outside_ok = r["max_change_outside"] <= 1
         r.update(classifiers_ok=classifiers_ok, anatomy_ok=anatomy_ok, outside_ok=outside_ok,
                  valid=classifiers_ok and anatomy_ok and outside_ok)
+    return originals, edits
 
-    table = pd.DataFrame([{k: v for k, v in r.items() if k not in ("mask", "file")} for r in rows])
-    table.round(4).to_csv(RESULTS / "radedit_tuning.csv", index=False)
+
+GENERATE = {  # the addition configs kept after tuning: prompt, (mask kind, parameters), skip ratio
+    "cardiomegaly": ("Cardiomegaly", ("grown_heart", 0.30), 0.5),
+    "effusion": (ADD_PROMPTS["effusion"], ("lung_bases", (0.75, 0.5, 10)), 0.5),
+}
+
+
+def generate(args: argparse.Namespace) -> None:
+    """Addition and sham edit for each source film of one split: normal films (for cardiomegaly
+    with CTR < 0.5 by CheXmask), one per patient, up to n per finding. The sham uses the same mask,
+    seed and edit path with the normal prompt, so only the prompt differs. Both are scored by the
+    three checks (a sham that passes would reveal an artifact). Edits: outputs/pairs/<split>/;
+    per-pair table: outputs/pairs_<split>.csv; pass rates: results/pairs_<split>_summary.csv."""
+    from .checks import used_classifiers
+
+    used = used_classifiers()
+    torch.backends.cuda.matmul.allow_tf32 = True
+    films = load_films(args.split).merge(pd.read_csv(OUTPUTS / "ctr_nih.csv", usecols=["image", "ctr"]), on="image")
+    normals = films[films["no_finding"] == 1]
+    sources = {"cardiomegaly": normals[normals["ctr"] < 0.5], "effusion": normals}
+    counts = {"cardiomegaly": args.n_cardiomegaly, "effusion": args.n_effusion}
+    pipe, rows = None, []
+    for finding, (prompt, (kind, param), skip) in GENERATE.items():
+        chosen = sources[finding].drop_duplicates("patient_id")
+        chosen = chosen.sample(n=min(counts[finding], len(chosen)), random_state=args.seed)
+        print(f"{finding}: {len(chosen)} source films ({args.split})", flush=True)
+        for k, (_, film) in enumerate(chosen.iterrows()):
+            mask = tuning_mask(landmarks_512(film), kind, param)
+            for pair_kind, pair_prompt in [("edit", prompt), ("sham", NORMAL_PROMPT)]:
+                out = OUTPUTS / "pairs" / args.split / finding / pair_kind / film["image"]
+                if not out.exists():  # finished edits are skipped
+                    if pipe is None:
+                        pipe = load_radedit()
+                    out.parent.mkdir(parents=True, exist_ok=True)
+                    original = Image.open(DATA / "nih512" / film["file"])
+                    Image.fromarray(edit_film(pipe, original, mask, pair_prompt, args.guidance, skip,
+                                              args.steps, args.seed + k, args.feather)).save(out)
+                rows.append({"split": args.split, "finding": finding, "kind": pair_kind, "direction": "add",
+                             "prompt": pair_prompt, "image": film["image"], "patient_id": film["patient_id"],
+                             "file": film["file"], "edit_file": out, "mask": mask})
+            if (k + 1) % 50 == 0:
+                print(f"  {finding}: {k + 1}/{len(chosen)} films edited", flush=True)
+    del pipe
+    torch.cuda.empty_cache()
+
+    score_pairs(rows, used, args.feather)
+    table = pd.DataFrame([{k: v for k, v in r.items() if k not in ("mask", "file", "edit_file")} for r in rows])
+    table.round(4).to_csv(OUTPUTS / f"pairs_{args.split}.csv", index=False)
+    checks = ["classifiers_ok", "anatomy_ok", "outside_ok", "valid"]
+    summary = table.groupby(["finding", "kind"])[checks].mean().round(3)
+    summary.insert(0, "n", table.groupby(["finding", "kind"]).size())
+    summary.insert(1, "n_valid", table.groupby(["finding", "kind"])["valid"].sum())
+    summary.to_csv(RESULTS / f"pairs_{args.split}_summary.csv")
+    print(f"Pairs of the {args.split} split (a valid sham would mean the edit path alone adds the finding):")
+    print(summary.to_string())
+
+
+def tune(args: argparse.Namespace) -> None:
+    """One tuning round on val films (TUNE_ROUNDS[args.round]): every config edits the same n films of
+    its finding and direction (one per patient), then the three checks score every edit. For
+    cardiomegaly the source films must be able to cross CTR 0.5 (by CheXmask): normal films below it
+    for additions, cardiomegaly films above it for removals. Both CTRs of the check itself come from
+    the segmenter, so its offset from CheXmask cancels."""
+    from .checks import used_classifiers, val_films
+
+    used = used_classifiers()  # stops here if a finding has no validated classifier
+    torch.backends.cuda.matmul.allow_tf32 = True
+    films = load_films("val").merge(val_films()[["image", "ctr"]], on="image")
+    sources = {
+        ("cardiomegaly", "add"): films[(films["no_finding"] == 1) & (films["ctr"] < 0.5)],
+        ("cardiomegaly", "remove"): films[(films["cardiomegaly"] == 1) & (films["ctr"] > 0.5)],
+        ("effusion", "add"): films[films["no_finding"] == 1],
+        ("effusion", "remove"): films[films["effusion"] == 1],
+    }
+    sources = {k: v.drop_duplicates("patient_id").sample(n=args.n, random_state=args.seed) for k, v in sources.items()}
+
+    configs = TUNE_ROUNDS[args.round]
+    pipe, rows = None, []
+    for name, finding, direction, prompt, (kind, param), skip in configs:
+        out_dir = OUTPUTS / "radedit_tuning" / name
+        out_dir.mkdir(parents=True, exist_ok=True)
+        for k, (_, film) in enumerate(sources[(finding, direction)].iterrows()):
+            mask = tuning_mask(landmarks_512(film), kind, param)
+            out = out_dir / film["image"]
+            if not out.exists():  # finished edits are skipped
+                if pipe is None:
+                    pipe = load_radedit()
+                original = Image.open(DATA / "nih512" / film["file"])
+                Image.fromarray(edit_film(pipe, original, mask, prompt, args.guidance, skip,
+                                          args.steps, args.seed + k, args.feather)).save(out)
+            rows.append({"config": name, "finding": finding, "direction": direction, "prompt": prompt,
+                         "skip_ratio": skip, "image": film["image"], "patient_id": film["patient_id"],
+                         "file": film["file"], "edit_file": out, "mask": mask})
+    del pipe
+    torch.cuda.empty_cache()
+
+    originals, edits = score_pairs(rows, used, args.feather)
+    suffix = "" if args.round == "first" else f"_{args.round}"
+    table = pd.DataFrame([{k: v for k, v in r.items() if k not in ("mask", "file", "edit_file")} for r in rows])
+    table.round(4).to_csv(RESULTS / f"radedit_tuning{suffix}.csv", index=False)
     checks = ["classifiers_ok", "anatomy_ok", "outside_ok", "valid"]
     summary = table.groupby("config", sort=False)[checks].mean().round(2)
     summary.insert(0, "n", table.groupby("config", sort=False).size())
-    summary.to_csv(RESULTS / "radedit_tuning_summary.csv")
-    print(f"Share of edits passing each check (guidance {args.guidance}, skip ratio {args.skip_ratio}, "
-          f"{args.steps} steps; classifiers used: {used}):")
+    summary.to_csv(RESULTS / f"radedit_tuning{suffix}_summary.csv")
+    print(f"Share of edits passing each check (guidance {args.guidance}, {args.steps} steps; "
+          f"classifiers used: {used}):")
     print(summary.to_string())
 
-    for name, finding, direction, prompt, _ in TUNE_CONFIGS:
+    for name, finding, direction, prompt, _, skip in configs:
         idx = [i for i, r in enumerate(rows) if r["config"] == name]
         labels = ["valid" if rows[i]["valid"] else "fails: " + ", ".join(
             c.removesuffix("_ok") for c in checks[:3] if not rows[i][c]) for i in idx]
         gallery([(originals[i].astype(float), edits[i].astype(float), rows[i]["mask"]) for i in idx],
-                f"Tuning: {direction} {finding} (prompt \"{prompt}\", guidance {args.guidance}, "
-                f"skip {args.skip_ratio})", RESULTS / f"radedit_tuning_{name}.jpg", labels)
+                f"Tuning: {direction} {finding} (prompt \"{prompt}\", guidance {args.guidance}, skip {skip})",
+                RESULTS / f"radedit_tuning_{name}.jpg", labels)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="command", required=True)
+    g = sub.add_parser("generate", help="Addition and sham edit per source film of a split, scored")
+    g.add_argument("--split", choices=["test", "train"], required=True)
+    g.add_argument("--n-cardiomegaly", type=int, default=380, help="Source films (250 valid at a 0.8 pass rate, + margin)")
+    g.add_argument("--n-effusion", type=int, default=600, help="Source films (250 valid at a 0.5 pass rate, + margin)")
+    g.add_argument("--steps", type=int, default=100)
+    g.add_argument("--guidance", type=float, default=15.0)
+    g.add_argument("--feather", type=float, default=3.0)
+    g.add_argument("--seed", type=int, default=0)
+    g.set_defaults(func=generate)
     t = sub.add_parser("tune", help="Day-2 tuning round on val films, scored by the three checks")
     t.add_argument("--n", type=int, default=10, help="Films per finding and direction")
     t.add_argument("--steps", type=int, default=100)
+    t.add_argument("--round", choices=list(TUNE_ROUNDS), default="first",
+                   help="first: additions and removals at skip 0.5; removals: follow-up at skip 0.3 and 0.2")
     t.add_argument("--guidance", type=float, default=15.0, help="Paper: 15; model card: 7.5")
-    t.add_argument("--skip-ratio", type=float, default=0.5)
     t.add_argument("--feather", type=float, default=3.0, help="Blur (px) of the paste-back border")
     t.add_argument("--seed", type=int, default=0)
     t.set_defaults(func=tune)
