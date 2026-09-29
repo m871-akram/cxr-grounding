@@ -8,10 +8,13 @@ vision-language model actually uses the image.
 **Question.** If a finding is removed from (or added to) a chest X-ray by a *minimal* diffusion edit,
 does MedGemma's answer change accordingly?
 
-**Why it is new.** The 2026 papers on this topic test grounding with blank images, pixel shuffling,
-another patient's image or occlusion (CORAL arXiv 2607.03647; Lotfinia et al. arXiv 2606.17710;
-HalluCXR arXiv 2605.20469). None of them uses a same-patient image in which only the finding
-changed. That is the cleanest causal test, and generative editing makes it possible.
+**Why it is new.** Grounding tests of medical VLMs use blank, shuffled, other-patient or occluded
+images (CORAL arXiv 2607.03647; Lotfinia et al. arXiv 2606.17710), or score hallucinations on
+unmodified images (HalluCXR arXiv 2605.20469). One 2026 paper uses same-patient RadEdit removals
+on MedGemma, but only to filter samples for an attribution benchmark, with unvalidated edits and
+removal only (Xiong et al., arXiv 2605.20158). This project makes the same-patient counterfactual
+the measurement: validated edits in both directions, same-mask sham edits, patient-level CIs, and
+LoRA training on the pairs.
 
 - **H1.** On a large share of valid counterfactual pairs, MedGemma keeps the same answer
   (it answers from text priors, not from the image).
@@ -85,8 +88,15 @@ approval), read token created.
     against the generic "No acute cardiopulmonary process";
   - original pixels pasted back outside the edit mask with a feathered edge of a few pixels, for
     edits and sham edits alike.
-- [ ] Edit-check classifier: not trained on NIH (RadEdit was); the TorchXRayVision model is chosen
-      after the other session's check.
+- [ ] Edit-check classifiers, chosen first: AUROC on real NIH PA validation films for
+      TorchXRayVision `densenet121-res224-pc` (PadChest) and `densenet121-res224-chex` (CheXpert).
+      If both reach at least 0.80 for a finding, an edit must convince both; if only one does, it
+      is used alone for that finding and the results say so; if neither does, stop and decide.
+      The one-classifier results are reported as a sensitivity check. No NIH-trained (`-nih`,
+      `-all`) or MIMIC-trained models: RadEdit saw NIH, and MIMIC is in RadEdit's and MedGemma's
+      training data.
+- [ ] If the other session maps ChestX-Det (training set of the TorchXRayVision segmenter, a subset
+      of NIH) to NIH file names, those films are excluded from the edit and audit sets.
 - [ ] `cxr/edit.py`: remove / add / sham edits for ~400 source films per finding (test-split
       patients for the audit, train-split patients for LoRA); resumable.
 - [ ] The three checks (section 2); segmenter CTR vs CheXmask CTR on real films first.
@@ -105,13 +115,21 @@ approval), read token created.
   threshold, in the direction of the edit (remove: from above to below; add: from below to above).
   Flip rate = flips / valid pairs whose original answer is on the finding's side of the threshold;
   pairs already on the target side are counted and reported separately.
-- Secondary: the same with the threshold at 0.5, and the change in log-odds,
-  logit P(yes | edited) - logit P(yes | original).
+- Secondary: the same with the threshold at 0.5; and the change in log-odds,
+  logit P(yes | edited) - logit P(yes | original), reported for all valid pairs.
 - Sham edits are scored with the same rules; they should not flip.
 - Every rate is reported twice: on all pairs, and without the pairs where either answer does not
   start with yes/no (yes/no probability mass below 0.5 at the first answer token).
 - Originals and edits reach MedGemma through the same path (512-px PNG, resized to 896 px by the
   processor), so resolution is not a cue.
+
+**Numbers to compare with** (other models, data and interventions: context, not a head-to-head).
+Both papers report the share of correct answers that flip, as our primary rate does.
+- Occluding the finding flips 35.1% (95% CI 26.3-45.0, n = 97) of MedGemma-1.5-4B's correct
+  cardiomegaly answers and 8.8% (3.0-23.0, n = 34) of its correct effusion answers (Lotfinia et
+  al., MIMIC-CXR at 224 px).
+- RadEdit removals flip 10-34% of MedGemma-4B's correct answers while background edits leave them
+  unchanged (Xiong et al., three datasets, direct mode; shares computed from their Table 3).
 
 **Day 4, the fix.** Output: before / after table.
 - [ ] `cxr/lora.py`: LoRA on training pairs (patient split), bf16, checkpoints; VQA-RAD training
@@ -198,7 +216,9 @@ Rules:
 - RadEdit (ECCV 2024): arXiv 2312.12865, weights: huggingface.co/microsoft/radedit
 - MedGemma technical report: arXiv 2507.05201
 - CORAL, "Do Medical VLMs Actually See?": arXiv 2607.03647
-- "VLMs for chest radiography do not always need the image": arXiv 2606.17710
+- Lotfinia et al., "Vision-language models for chest radiography do not always need the image":
+  arXiv 2606.17710
+- Xiong et al., "Rethinking Visual Attribution for Chest X-ray Reasoning in LVLMs": arXiv 2605.20158
 - HalluCXR: arXiv 2605.20469; ProbMed ("Worse than Random?"): arXiv 2405.20421
 - DeGrave et al., auditing classifiers with generative AI (Nature BME 2023)
 
@@ -258,3 +278,11 @@ bootstrap CIs: AUROC 0.914 (95% CI 0.908-0.921) on PA films, 0.795 (0.778-0.811)
 so direct SSH to the pods (random high port) failed until another network was used. The pod's
 `results/` still holds the smoke-test PNG galleries (JPEG in git): delete them on the next pod,
 or `pod/sync.sh pull` brings them back. Session cost: CPU pods 32 min, about $0.04.
+
+**2026-09-29, training data of the models (`papers/NOTES.md`).** MedGemma never saw ChestX-ray14:
+the tech report marks it "not seen during any model development stages" (Table 2, p.6), and
+MIMIC-CXR is its only named chest X-ray training set. Its answers on our NIH films cannot come
+from memorized films, which makes the audit cleaner. RadEdit did see NIH (a limitation to state),
+and so did TorchXRayVision's `-all` and `-nih` classifiers and its ChestX-Det segmenter: hence the
+Day-2 classifier protocol and the ChestX-Det exclusion. The novelty search found one earlier use
+of same-patient RadEdit removals on MedGemma (Xiong et al.); §1 now says what is new relative to it.
