@@ -1,0 +1,2 @@
+n_films,segmenter_failures,pearson_r,mean_abs_diff,agree_above_0.5,auroc_chexmask,auroc_segmenter
+772,1,0.893,0.025,0.899,0.907,0.929

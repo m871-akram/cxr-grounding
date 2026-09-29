@@ -19,7 +19,8 @@ case "${1:-}" in
       ./ "$REMOTE/"
     ;;
   pull)
-    rsync -rltz "$REMOTE/results/" results/  # no -p: local files keep normal permissions
+    rsync -rltz "$REMOTE/results/" results/
+    chmod -R u=rwX,go=rX results/  # the Mac's openrsync keeps the pod's world-writable modes
     ;;
   *)
     echo "usage: bash pod/sync.sh push|pull" >&2

@@ -1,0 +1,8 @@
+config,n,classifiers_ok,anatomy_ok,outside_ok,valid
+cardiomegaly_add_small,10,0.8,0.2,1.0,0.2
+cardiomegaly_add_large,10,0.9,0.8,1.0,0.8
+cardiomegaly_remove_generic,10,0.2,0.4,1.0,0.2
+cardiomegaly_remove_specific,10,0.0,0.0,1.0,0.0
+effusion_add,10,0.8,0.7,1.0,0.5
+effusion_remove_generic,10,0.1,0.0,1.0,0.0
+effusion_remove_specific,10,0.0,0.1,1.0,0.0

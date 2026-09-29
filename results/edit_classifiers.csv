@@ -1,0 +1,5 @@
+classifier,finding,n_with,n_normal,auroc,ci_low,ci_high,threshold,used
+densenet121-res224-pc,cardiomegaly,120,653,0.919,0.896,0.94,0.224,True
+densenet121-res224-pc,effusion,298,653,0.847,0.82,0.872,0.506,True
+densenet121-res224-chex,cardiomegaly,120,653,0.782,0.744,0.818,0.11,False
+densenet121-res224-chex,effusion,298,653,0.812,0.784,0.838,0.263,True

@@ -95,8 +95,6 @@ approval), read token created.
       The one-classifier results are reported as a sensitivity check. No NIH-trained (`-nih`,
       `-all`) or MIMIC-trained models: RadEdit saw NIH, and MIMIC is in RadEdit's and MedGemma's
       training data.
-- [ ] If the other session maps ChestX-Det (training set of the TorchXRayVision segmenter, a subset
-      of NIH) to NIH file names, those films are excluded from the edit and audit sets.
 - [ ] `cxr/edit.py`: remove / add / sham edits for ~400 source films per finding (test-split
       patients for the audit, train-split patients for LoRA); resumable.
 - [ ] The three checks (section 2); segmenter CTR vs CheXmask CTR on real films first.
@@ -105,6 +103,10 @@ approval), read token created.
 **Day 3, the audit.** Output: flip rate with CIs (headline result).
 - [ ] `cxr/audit.py`: MedGemma in bf16, two phrasings per question, on original, edited, sham,
       blank, shuffled and other-patient images.
+- [ ] Second model: `google/medgemma-1.5-4b-it` (same architecture and chat template), same code
+      with only the model id changed. First diff both models' `preprocessor_config.json` and
+      `processor_config.json`; if they differ, decide before running. The LoRA fix (day 4)
+      defaults to `medgemma-4b-it`; the choice is made after the audit.
 - [ ] `notebooks/03_audit.ipynb`: the analyses of section 5.
 
 **Flip rule, fixed on 2026-09-29 before any audit result.**
@@ -284,5 +286,26 @@ the tech report marks it "not seen during any model development stages" (Table 2
 MIMIC-CXR is its only named chest X-ray training set. Its answers on our NIH films cannot come
 from memorized films, which makes the audit cleaner. RadEdit did see NIH (a limitation to state),
 and so did TorchXRayVision's `-all` and `-nih` classifiers and its ChestX-Det segmenter: hence the
-Day-2 classifier protocol and the ChestX-Det exclusion. The novelty search found one earlier use
-of same-patient RadEdit removals on MedGemma (Xiong et al.); §1 now says what is new relative to it.
+Day-2 classifier protocol. The novelty search found one earlier use of same-patient RadEdit
+removals on MedGemma (Xiong et al.); §1 now says what is new relative to it. No ChestX-Det
+exclusion is needed: the TorchXRayVision segmenter was trained on external data, not on ChestX-Det
+(SAR-Net p.6), ChestX-Det's renamed files cannot be mapped to NIH anyway, and the check of the
+segmenter's CTR against CheXmask on real films covers the rest.
+
+**2026-09-29, day 2: checks and the RadEdit tuning round (RTX PRO 6000).** No A100 or L4 could be
+created in EUR-IS-1, so the RTX PRO 6000 (96 GB, $2.09/h) was used with Akram's OK; torch 2.8 runs
+on it (`setup.sh` bf16 check). Edit-check classifiers on 1,035 val films
+(`results/edit_classifiers.csv`): `-pc` AUROC 0.919 for cardiomegaly and 0.847 for effusion,
+`-chex` 0.782 and 0.812. So cardiomegaly edits are checked by `-pc` alone (`-chex` is below 0.80)
+and effusion edits by both. The segmenter's CTR agrees with CheXmask on 772 val films
+(`results/segmenter_ctr.csv`): r = 0.893, mean difference 0.025, same side of 0.5 for 89.9% of
+films, and AUROC 0.929 for cardiomegaly vs no finding (CheXmask: 0.907 on the same films), so no
+U-Net of our own is needed. Tuning round (guidance 15, skip ratio 0.5, 100 steps, paste-back with
+a 3-px feather, 10 val films per direction; `results/radedit_tuning*.{csv,jpg}`): share of valid
+edits 0.8 for cardiomegaly added with the large mask (0.2 with the small one, whose CTR rarely
+reaches 0.5), 0.5 for effusion added. Removals fail: 0.2 and 0.0 for cardiomegaly (generic prompt,
+"Normal heart size"), 0.0 and 0.0 for effusion (generic prompt, "No pleural effusion"). Additions
+now follow the anatomical masks (heart enlarged toward the apex, curved effusion edge); removals
+barely change the film at skip ratio 0.5. MedGemma 1.5 and 4B processor configs: identical except
+`do_convert_rgb` (null vs true), which does not affect `cxr/audit.py` (films are converted to RGB
+before the processor). Session cost: RTX PRO 6000 for 9 min, about $0.31.

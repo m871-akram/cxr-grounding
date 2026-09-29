@@ -66,20 +66,28 @@ def p_yes(model, processor, images: list, question: str, batch_size: int) -> np.
     return torch.cat(scores).numpy()
 
 
-def auroc_ci(df: pd.DataFrame, n_boot: int = 1000, seed: int = 0) -> tuple[float, float, float]:
-    """AUROC of p_yes against label, with a 95% bootstrap CI that resamples patients."""
+def auroc_ci(df: pd.DataFrame, score: str = "p_yes", n_boot: int = 1000,
+             seed: int = 0) -> tuple[float, float, float]:
+    """AUROC of the score column against label, with a 95% bootstrap CI that resamples patients."""
     df = df.reset_index(drop=True)
-    point = auroc(df.loc[df["label"] == 1, "p_yes"].to_numpy(), df.loc[df["label"] == 0, "p_yes"].to_numpy())
+    point = auroc(df.loc[df["label"] == 1, score].to_numpy(), df.loc[df["label"] == 0, score].to_numpy())
     patients = [g.index.to_numpy() for _, g in df.groupby("patient_id")]
     rng = np.random.default_rng(seed)
     boots = []
     for _ in range(n_boot):
         s = df.loc[np.concatenate([patients[i] for i in rng.integers(len(patients), size=len(patients))])]
-        pos, neg = s.loc[s["label"] == 1, "p_yes"].to_numpy(), s.loc[s["label"] == 0, "p_yes"].to_numpy()
+        pos, neg = s.loc[s["label"] == 1, score].to_numpy(), s.loc[s["label"] == 0, score].to_numpy()
         if len(pos) and len(neg):
             boots.append(auroc(pos, neg))
     low, high = np.percentile(boots, [2.5, 97.5])
     return point, low, high
+
+
+def youden(positives: np.ndarray, negatives: np.ndarray) -> float:
+    """The threshold that best separates the two groups: highest sensitivity + specificity - 1."""
+    thresholds = np.unique(np.concatenate([positives, negatives]))
+    j = [(positives >= t).mean() - (negatives >= t).mean() for t in thresholds]
+    return float(thresholds[int(np.argmax(j))])
 
 
 def smoke(args: argparse.Namespace) -> None:
