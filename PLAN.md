@@ -121,7 +121,8 @@ Notebooks run on the Mac and read only the small tables in `results/`; heavy wor
 | GitHub | Code and `results/` (small files only) |
 
 Rules: stop the pod whenever nothing is running; long runs inside `tmux` with logs in
-`/workspace/logs`; code reaches the pod by `git pull`, small results come back by git or `scp`.
+`/workspace/logs` (`pod/run.sh`); code goes to the pod and small results come back by `rsync`
+(`pod/sync.sh`), so the pod needs no GitHub credentials.
 Sprint budget: $25-35, and the prepaid balance (auto top-up off) is the hard cap.
 
 ## 7. Clinical input

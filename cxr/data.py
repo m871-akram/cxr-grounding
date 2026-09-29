@@ -1,8 +1,8 @@
-"""Stage 1: data. All three commands are run by slurm/data.sbatch.
+"""Stage 1: data. All three commands are run by pod/data.sh.
 
     python -m cxr.data chexmask --src ChestX-Ray8.csv        # compact CheXmask file (landmarks only)
     python -m cxr.data ctr                                   # CTR per image, summary + first figure
-    python -m cxr.data prepare --nih-zip images_001.zip --csv data/Data_Entry_2017.csv
+    python -m cxr.data prepare --nih-zip images_001.zip --csv data/Data_Entry_2017_v2020.csv
                                                              # 512-px NIH subset -> data/nih512
 
 chexmask: keeps the columns this project uses from the 2.2 GB CheXmask file for NIH (image,
@@ -351,7 +351,7 @@ def main() -> None:
     c = sub.add_parser("ctr", help="CTR per image from CheXmask, summary table and figure")
     c.add_argument("--chexmask", type=Path, default=DATA / "chexmask_nih_landmarks.csv",
                    help="Output of the chexmask command (or the original CheXmask CSV)")
-    c.add_argument("--labels", type=Path, default=DATA / "Data_Entry_2017.csv", help="NIH labels CSV")
+    c.add_argument("--labels", type=Path, default=DATA / "Data_Entry_2017_v2020.csv", help="NIH labels CSV")
     c.add_argument("--min-rca", type=float, default=0.7,
                    help="Keep masks with Dice RCA (Mean) >= this (CheXmask authors' advice: 0.7)")
     c.add_argument("--out", type=Path, default=OUTPUTS / "ctr_nih.csv")
@@ -371,7 +371,8 @@ def main() -> None:
     p.add_argument("--val-frac", type=float, default=0.1)
     p.add_argument("--test-frac", type=float, default=0.1)
     p.add_argument("--seed", type=int, default=0)
-    p.add_argument("--workers", type=int, default=int(os.environ.get("SLURM_CPUS_PER_TASK", os.cpu_count() or 1)))
+    # Inside a container os.cpu_count() sees all the host's CPUs, not the pod's share: cap it.
+    p.add_argument("--workers", type=int, default=min(8, os.cpu_count() or 1))
     p.set_defaults(func=prepare)
 
     args = parser.parse_args()

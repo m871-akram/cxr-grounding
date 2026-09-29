@@ -1,10 +1,9 @@
-# Cluster-only folders (see README): datasets, big working files, Slurm logs, environment
+# Pod-only folders (see README): datasets, big working files, logs, environment
 .venv/
 .cache/
 data/
 outputs/
 logs/
-wandb/
 # Model weights never go to git
 *.pt
 *.pth
