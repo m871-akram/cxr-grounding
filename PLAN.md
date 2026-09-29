@@ -62,7 +62,7 @@ approval), read token created.
 **Day 1, data and first tries.** Output: go / no-go per finding.
 - [ ] Replace `slurm/` (old cluster) with a RunPod setup: `pod/setup.sh` creates the environment
       and the Hugging Face cache on the network volume; update the README "Run it" section.
-- [ ] Create the pod (A40 48 GB, public IP, 50 GB network volume at `/workspace`), run the data
+- [ ] Create the pod (L4 24 GB in EUR-IS-1, public IP, 50 GB network volume at `/workspace`), run the data
       stage: `chexmask`, `ctr`, `prepare` on the 12 image zips. Check the CTR numbers against
       `results/ctr_summary.csv`.
 - [ ] RadEdit smoke test: 10 films per finding, remove and add, saved as a gallery.
@@ -116,7 +116,7 @@ Notebooks run on the Mac and read only the small tables in `results/`; heavy wor
 | Where | Role |
 |---|---|
 | Mac (M1) | Claude Code, git, notebooks on `results/`, figures, writing |
-| RunPod pod: A40 48 GB (~$0.49/h) | Data prep, RadEdit, MedGemma audit and LoRA (bf16) |
+| RunPod pod: L4 24 GB in EUR-IS-1 ($0.49/h) | Data prep, RadEdit, MedGemma audit and LoRA (bf16) |
 | RunPod network volume, 50 GB at `/workspace` (~$3.50/month) | Environment, data (~2 GB), Hugging Face cache (~15 GB), outputs |
 | GitHub | Code and `results/` (small files only) |
 
@@ -153,7 +153,7 @@ Rules:
 | RadEdit edits unconvincing for a finding | Drop that finding; one well-verified finding is enough |
 | MedGemma cannot detect a finding at all (AUROC near 0.5) | Drop it: grounding is meaningless if the model never sees the finding |
 | Pretrained segmenter disagrees with CheXmask | Train a U-Net on CheXmask masks (~1-2 GPU-hours) |
-| A40 unavailable | RTX A6000 or L40S (48 GB) |
+| L4 unavailable, or a step needs more memory or speed | A100 80 GB in EUR-IS-1 ($1.59/h), after asking |
 | Forgotten pod | Stop rule above; prepaid balance as hard cap |
 | Fine-tuning does not help | The audit alone (days 1-3) is a complete result |
 | Sprint runs late | Cut in this order: second finding, VQA-RAD mixing, day-5 write-up length |

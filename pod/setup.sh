@@ -37,6 +37,9 @@ import importlib.metadata as md
 import torch
 gpu = torch.cuda.get_device_name(0) if torch.cuda.is_available() else "NO GPU VISIBLE"
 print(f"torch {torch.__version__} from {torch.__file__.rsplit('/torch/', 1)[0]} | {gpu}")
+if torch.cuda.is_available():  # a real kernel: proves this torch build supports the GPU architecture
+    x = torch.ones(256, 256, device="cuda", dtype=torch.bfloat16)
+    print("bf16 matmul on the GPU:", "ok" if (x @ x)[0, 0].item() == 256 else "WRONG RESULT")
 print(" | ".join(f"{p} {md.version(p)}" for p in
                  ["transformers", "diffusers", "peft", "accelerate", "torchxrayvision", "huggingface_hub"]))
 EOF
