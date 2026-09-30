@@ -1,9 +1,9 @@
-model,images,n,max_abs_diff_p_yes,max_abs_diff_log_odds,share_identical_5_decimals
-4b,real originals (cardiomegaly),760,0.0,0.0,1.0
+model,images,n,max_abs_diff_p_yes,max_abs_diff_log_odds,share_identical_log_odds
+4b,real originals (cardiomegaly),760,2.1884980000000024e-06,0.06204600000000049,0.9973684210526316
 4b,+30% edits,200,0.0,0.0,1.0
 4b,effusion originals,200,0.0,0.0,1.0
 4b,effusion shams,200,0.0,0.0,1.0
-1.5-4b,real originals (cardiomegaly),760,0.00264,0.12491,0.99737
+1.5-4b,real originals (cardiomegaly),760,0.0003544360000000005,0.06972700000000032,0.9973684210526316
 1.5-4b,+30% edits,200,0.0,0.0,1.0
 1.5-4b,effusion originals,200,0.0,0.0,1.0
 1.5-4b,effusion shams,200,0.0,0.0,1.0

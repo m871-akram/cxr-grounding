@@ -1,5 +1,5 @@
 finding,question,n_with,n_normal,auroc,ci_low,ci_high,mean_p_yes_with,mean_p_yes_normal,min_yes_no_mass
-cardiomegaly,Is there cardiomegaly in this image?,100,100,0.93,0.893,0.961,0.93,0.228,0.084
-cardiomegaly,Is the heart enlarged in this image?,100,100,0.93,0.894,0.96,0.725,0.092,0.196
-effusion,Is there pleural effusion in this image?,100,100,0.89,0.837,0.937,0.6,0.02,0.14
-effusion,Is there fluid in the pleural space in this image?,100,100,0.884,0.828,0.932,0.671,0.051,0.166
+cardiomegaly,Is there cardiomegaly in this image?,100,100,0.928,0.89,0.96,0.913,0.2,0.221
+cardiomegaly,Is the heart enlarged in this image?,100,100,0.928,0.889,0.959,0.702,0.081,0.114
+effusion,Is there pleural effusion in this image?,100,100,0.885,0.833,0.934,0.587,0.022,0.109
+effusion,Is there fluid in the pleural space in this image?,100,100,0.898,0.851,0.941,0.66,0.037,0.194

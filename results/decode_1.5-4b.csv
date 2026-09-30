@@ -1,0 +1,801 @@
+image,condition,text,log_odds,p_yes,yes_no_mass,answer,answer_in_text
+00000346_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.0509415,0.017108195,0.07426077,other,no
+00000346_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-3.7408466,0.02318376,0.066236824,other,no
+00000346_000.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-2.0688229,0.112164214,0.035531063,other,no
+00000346_000.png,blank,"No.
+",-5.7817516,0.003073832,0.60430795,no,no
+00000348_003.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-3.439108,0.03109535,0.092146456,other,no
+00000348_003.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",5.70945,0.9966965,0.31222248,other,no
+00000348_003.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size appears to be enlarged.
+",8.923399,0.9998667,0.5820956,yes,yes
+00000348_003.png,blank,"No.
+",-5.810152,0.0029880193,0.68733716,no,no
+00000408_000.png,original,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",1.0530796,0.74136585,0.033706408,other,no
+00000408_000.png,growth 0,"Based on the chest X-ray image, there is evidence of cardiomegaly. The heart appears to be enlarged.
+",7.20006,0.99925405,0.33897516,other,other
+00000408_000.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size appears to be enlarged.
+",12.806482,0.99999726,0.77258664,yes,yes
+00000408_000.png,blank,"No.
+",-5.712904,0.0032921922,0.60599643,no,no
+00001950_001.png,original,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",-2.2792873,0.092852965,0.068220876,other,no
+00001950_001.png,growth 0,"Yes, there appears to be cardiomegaly in this image. The heart size appears to be enlarged relative to the chest cavity.
+",10.707939,0.9999776,0.642587,yes,yes
+00001950_001.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size appears to be enlarged.
+",14.767585,0.99999964,0.9213619,yes,yes
+00001950_001.png,blank,"No.
+",-5.777466,0.0030869937,0.7156693,no,no
+00002081_003.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-6.0371304,0.002382712,0.11595151,other,no
+00002081_003.png,growth 0,"Based on the chest X-ray image, there is no clear evidence of cardiomegaly. The heart size appears to be within normal limits.
+",0.49593925,0.62150455,0.056429755,other,no
+00002081_003.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size seems enlarged compared to the chest cavity.
+",12.39045,0.9999958,0.86292094,yes,yes
+00002081_003.png,blank,"No.
+",-5.722807,0.0032598565,0.57549834,no,no
+00002223_001.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.839218,0.007851111,0.10323499,other,no
+00002223_001.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.693205,0.009074196,0.09275581,other,no
+00002223_001.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-3.9431877,0.019017637,0.07414229,other,no
+00002223_001.png,blank,"No.
+",-5.639473,0.00354215,0.6352807,no,no
+00002295_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.7227383,0.00881245,0.11421347,other,no
+00002295_000.png,growth 0,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",-2.3007183,0.09106349,0.049117625,other,no
+00002295_000.png,growth 0.06,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",0.40420723,0.59969807,0.048713826,other,no
+00002295_000.png,blank,"No.
+",-5.727703,0.0032439865,0.6346265,no,no
+00002375_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.381153,0.0045814253,0.10372237,other,no
+00002375_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-3.4487896,0.030804977,0.047130987,other,no
+00002375_000.png,growth 0.06,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",-0.59978104,0.35439375,0.02618271,other,no
+00002375_000.png,blank,"No.
+",-5.738859,0.0032081127,0.6623611,no,no
+00002592_001.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.7785816,0.0083378125,0.10435758,other,no
+00002592_001.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-2.2447205,0.09580584,0.05593295,other,no
+00002592_001.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",4.9682827,0.993093,0.2616744,other,no
+00002592_001.png,blank,"No.
+",-5.810152,0.0029880193,0.68733716,no,no
+00002593_001.png,original,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",-2.975378,0.048550688,0.06708465,other,no
+00002593_001.png,growth 0,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",-0.33657455,0.4166418,0.036394484,other,no
+00002593_001.png,growth 0.06,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",3.8521175,0.9792068,0.14524385,other,no
+00002593_001.png,blank,"No.
+",-5.747856,0.0031794703,0.6043257,no,no
+00002669_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.118004,0.016016277,0.0919281,other,no
+00002669_000.png,growth 0,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",-1.2339478,0.22549123,0.03968827,other,no
+00002669_000.png,growth 0.06,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",2.5152721,0.9252055,0.069454245,other,no
+00002669_000.png,blank,"No.
+",-5.727703,0.0032439865,0.6346265,no,no
+00002944_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-3.5670204,0.027464285,0.036997266,other,no
+00002944_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-1.3137093,0.21186681,0.019239176,other,no
+00002944_000.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",2.077921,0.8887386,0.03161877,other,no
+00002944_000.png,blank,"No.
+",-5.722807,0.0032598565,0.57549834,no,no
+00003084_001.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-2.774723,0.05870547,0.047871057,other,no
+00003084_001.png,growth 0,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",0.8187752,0.6939763,0.039104436,other,no
+00003084_001.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",4.384117,0.9876797,0.16087238,other,no
+00003084_001.png,blank,"No.
+",-5.6422844,0.0035322404,0.6881782,no,no
+00003228_001.png,original,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",0.234869,0.5584488,0.06439416,other,no
+00003228_001.png,growth 0,"Yes, there appears to be cardiomegaly in this image. The heart size seems enlarged compared to the chest cavity.
+",7.1391506,0.9992072,0.48468247,yes,yes
+00003228_001.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size seems enlarged relative to the chest cavity.
+",12.221518,0.9999951,0.8091764,yes,yes
+00003228_001.png,blank,"No.
+",-5.5803394,0.0037571162,0.6021108,no,no
+00003245_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-3.9122715,0.019603068,0.06619811,other,no
+00003245_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",4.8496265,0.9922295,0.19616298,other,no
+00003245_000.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size seems enlarged compared to the chest cavity.
+",11.58659,0.9999907,0.74845743,yes,yes
+00003245_000.png,blank,"No.
+",-5.7156696,0.0032831295,0.6346794,no,no
+00003331_001.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.469164,0.011327118,0.13956192,other,no
+00003331_001.png,growth 0,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",0.1967411,0.54902726,0.052745264,other,no
+00003331_001.png,growth 0.06,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",1.7289581,0.8492791,0.08175673,other,no
+00003331_001.png,blank,"No.
+",-5.715168,0.0032847715,0.63326186,no,no
+00003659_005.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.3949547,0.004518913,0.08328181,other,no
+00003659_005.png,growth 0,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",-3.552702,0.027849328,0.046973925,other,no
+00003659_005.png,growth 0.06,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",-0.9895439,0.27100217,0.029687498,other,no
+00003659_005.png,blank,"No.
+",-5.6890965,0.003371244,0.635326,no,no
+00004082_001.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-3.2507381,0.037300374,0.02332187,other,no
+00004082_001.png,growth 0,"Based on the chest X-ray image, it appears that the heart size is within normal limits. Therefore, the answer is no.
+",-0.5595341,0.36365527,0.015080337,other,no
+00004082_001.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size seems enlarged compared to the chest cavity.
+",11.930138,0.99999344,0.64588445,yes,yes
+00004082_001.png,blank,"No.
+",-5.5813503,0.0037533343,0.5742784,no,no
+00004093_002.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-3.3942432,0.032475863,0.047165647,other,no
+00004093_002.png,growth 0,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",-2.2247639,0.09754863,0.03965027,other,no
+00004093_002.png,growth 0.06,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",2.648983,0.93394834,0.07774435,other,no
+00004093_002.png,blank,"No.
+",-5.661579,0.003464974,0.6316018,no,no
+00004176_001.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-1.8516846,0.13567524,0.052455924,other,no
+00004176_001.png,growth 0,"Yes, there appears to be cardiomegaly in this image. The heart size appears to be enlarged.
+",10.353437,0.9999682,0.77239555,yes,yes
+00004176_001.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size appears to be enlarged.
+",12.939646,0.9999976,0.86448276,yes,yes
+00004176_001.png,blank,"No.
+",-5.7520847,0.0031660965,0.661688,no,no
+00004497_004.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-3.9709682,0.018506229,0.07380284,other,no
+00004497_004.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",3.9628353,0.9813455,0.13057122,other,no
+00004497_004.png,growth 0.06,"Based on the chest X-ray image, there is some evidence of cardiomegaly. The heart appears to be enlarged.
+",7.826576,0.9996012,0.4602713,other,other
+00004497_004.png,blank,"No.
+",-5.6890965,0.003371244,0.635326,no,no
+00004698_002.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-3.960123,0.018704252,0.09267134,other,no
+00004698_002.png,growth 0,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",0.25699806,0.5638982,0.038319524,other,no
+00004698_002.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size seems to be enlarged relative to the chest cavity.
+",10.912191,0.99998176,0.6717569,yes,yes
+00004698_002.png,blank,"No.
+",-5.5990505,0.0036877268,0.604379,no,no
+00004730_000.png,original,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",0.07135582,0.5178314,0.03960423,other,no
+00004730_000.png,growth 0,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",2.3020287,0.90904486,0.062315784,other,no
+00004730_000.png,growth 0.06,"Based on the chest X-ray image, there is some evidence of cardiomegaly. The heart appears to be enlarged.
+
+Therefore, the answer is yes",5.5375366,0.99607927,0.21569054,other,yes
+00004730_000.png,blank,"No.
+",-5.7520847,0.0031660965,0.661688,no,no
+00004758_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-4.4145164,0.011955733,0.08342278,other,no
+00004758_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-3.0197735,0.04654052,0.05400409,other,no
+00004758_000.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-1.3572655,0.2046851,0.044745825,other,no
+00004758_000.png,blank,"No.
+",-5.6113358,0.0036428634,0.66168207,no,no
+00006330_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.0228977,0.006542332,0.11607645,other,no
+00006330_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-4.3898125,0.012251104,0.09366131,other,no
+00006330_000.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-4.071867,0.016759854,0.08354888,other,no
+00006330_000.png,blank,"No.
+",-5.7520847,0.0031660965,0.661688,no,no
+00007265_002.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-6.3140125,0.00180748,0.2871827,other,no
+00007265_002.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-6.2537956,0.0019194494,0.31030846,other,no
+00007265_002.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.9902744,0.0024967277,0.28548086,other,no
+00007265_002.png,blank,"No.
+",-5.6422844,0.0035322404,0.6881782,no,no
+00007944_005.png,original,"Yes, there appears to be cardiomegaly in this image. The heart size seems enlarged compared to the chest cavity.
+",13.512602,0.9999987,0.83213013,yes,yes
+00007944_005.png,growth 0,"Yes, there appears to be cardiomegaly in this image. The heart size appears to be enlarged.
+",14.362104,0.9999994,0.8906826,yes,yes
+00007944_005.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size appears to be enlarged.
+",15.598845,0.9999999,0.94519705,yes,yes
+00007944_005.png,blank,"No.
+",-5.699898,0.0033351474,0.60522634,no,no
+00008473_006.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-6.3723087,0.001705298,0.23625115,other,no
+00008473_006.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.6533604,0.0034934694,0.2572158,other,no
+00008473_006.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.8170013,0.002967684,0.25850803,other,no
+00008473_006.png,blank,"No.
+",-5.777466,0.0030869937,0.7156693,no,no
+00008832_000.png,original,"Based on the chest X-ray image, the heart size appears to be slightly enlarged. Therefore, the answer is yes.
+",6.5747013,0.99860674,0.39567366,other,yes
+00008832_000.png,growth 0,"Yes, there appears to be cardiomegaly in this image. The heart size seems enlarged compared to the chest cavity.
+",12.426464,0.99999595,0.8474896,yes,yes
+00008832_000.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size seems enlarged compared to the chest cavity.
+",14.776142,0.99999964,0.951302,yes,yes
+00008832_000.png,blank,"No.
+",-5.6687164,0.0034404167,0.6053605,no,no
+00009638_025.png,original,"Yes, there appears to be cardiomegaly in this image. The heart size seems enlarged compared to the chest cavity.
+",14.33774,0.9999994,0.9383454,yes,yes
+00009638_025.png,growth 0,"Yes, there appears to be cardiomegaly in this image. The heart size seems enlarged compared to the chest cavity.
+",15.950537,0.9999999,0.9699879,yes,yes
+00009638_025.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart appears enlarged relative to the chest cavity.
+",16.429174,0.9999999,0.98145235,yes,yes
+00009638_025.png,blank,"No.
+",-5.734619,0.0032217002,0.6044098,no,no
+00009771_000.png,original,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",-1.2755547,0.21830788,0.034286693,other,no
+00009771_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",5.117489,0.9940446,0.12969752,other,no
+00009771_000.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",5.8488884,0.9971252,0.19674395,other,no
+00009771_000.png,blank,"No.
+",-5.7028427,0.0033253725,0.60644907,no,no
+00009981_000.png,original,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",-3.0251484,0.046302598,0.0835534,other,no
+00009981_000.png,growth 0,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",0.7714882,0.6838427,0.056872297,other,no
+00009981_000.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size seems to be enlarged relative to the chest cavity.
+",9.189886,0.99989796,0.6109399,yes,yes
+00009981_000.png,blank,"No.
+",-5.6422844,0.0035322404,0.6881782,no,no
+00010334_005.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.5522556,0.003863712,0.14351101,other,no
+00010334_005.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-3.8312588,0.02122216,0.08281036,other,no
+00010334_005.png,growth 0.06,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",-1.4954472,0.18310554,0.06081643,other,no
+00010334_005.png,blank,"No.
+",-5.8161793,0.0029701174,0.6064158,no,no
+00011465_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.5449963,0.003891753,0.093506105,other,no
+00011465_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.198202,0.0054961173,0.06634722,other,no
+00011465_000.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.1111183,0.0059932014,0.074310645,other,no
+00011465_000.png,blank,"No.
+",-5.604311,0.0036684491,0.5743918,no,no
+00011470_006.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.94767,0.0026051148,0.3906465,other,no
+00011470_006.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.921488,0.0072355443,0.3049614,other,no
+00011470_006.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.3868256,0.0122873,0.25534362,other,no
+00011470_006.png,blank,"No.
+",-5.7131996,0.003291222,0.5755553,no,no
+00011504_023.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.1578827,0.015399777,0.091974005,other,no
+00011504_023.png,growth 0,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",-3.4457893,0.030894678,0.08286098,other,no
+00011504_023.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size seems to be enlarged relative to the chest cavity.
+",7.289257,0.99931765,0.51769245,yes,yes
+00011504_023.png,blank,"No.
+",-5.7131996,0.003291222,0.5755553,no,no
+00011633_001.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-2.7175274,0.06194699,0.047974516,other,no
+00011633_001.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",4.7334957,0.9912811,0.17556247,other,no
+00011633_001.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size seems enlarged relative to the chest cavity.
+",10.097994,0.9999589,0.5807655,yes,yes
+00011633_001.png,blank,"No.
+",-5.658909,0.003474207,0.604436,no,no
+00012161_007.png,original,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",1.8093224,0.85927993,0.08168521,other,no
+00012161_007.png,growth 0,"Yes, there appears to be cardiomegaly in this image. The heart size appears to be enlarged relative to the chest cavity.
+",14.7661495,0.99999964,0.9121675,yes,yes
+00012161_007.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size appears to be enlarged relative to the chest cavity.
+",16.212048,0.9999999,0.9566549,yes,yes
+00012161_007.png,blank,"No.
+",-5.753847,0.0031605389,0.6875546,no,no
+00012296_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.9053116,0.007352672,0.093282215,other,no
+00012296_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.8441753,0.007812591,0.08355314,other,no
+00012296_000.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.417057,0.011925761,0.059236076,other,no
+00012296_000.png,blank,"No.
+",-5.8161793,0.0029701174,0.6064158,no,no
+00012372_005.png,original,"Based on the chest X-ray image, it is difficult to definitively determine if there is cardiomegaly. The heart size appears to be within normal limits,",-3.3917217,0.032555185,0.033025037,other,other
+00012372_005.png,growth 0,"Yes, there appears to be cardiomegaly in this image. The heart size seems enlarged relative to the chest cavity.
+",11.57494,0.9999906,0.64580846,yes,yes
+00012372_005.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size seems enlarged relative to the chest cavity.
+",14.837315,0.99999964,0.89097387,yes,yes
+00012372_005.png,blank,"No.
+",-5.5955524,0.0037006014,0.5734785,no,no
+00012646_014.png,original,"Yes, there appears to be cardiomegaly in the image. The heart size seems enlarged compared to the chest cavity.
+",15.470982,0.99999976,0.93051374,yes,yes
+00012646_014.png,growth 0,"Yes, there appears to be cardiomegaly in the image. The heart size seems enlarged compared to the chest cavity.
+",16.16901,0.9999999,0.9612473,yes,yes
+00012646_014.png,growth 0.06,"Yes, there appears to be cardiomegaly in the image. The heart size appears to be enlarged.
+",16.22398,0.9999999,0.9695504,yes,yes
+00012646_014.png,blank,"No.
+",-5.660246,0.003469581,0.63458186,no,no
+00013342_003.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.786474,0.008272806,0.08357698,other,no
+00013342_003.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-3.9761982,0.018411474,0.06691881,other,no
+00013342_003.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-3.538227,0.028243909,0.06720237,other,no
+00013342_003.png,blank,"No.
+",-5.658909,0.003474207,0.604436,no,no
+00013421_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.8735523,0.007588135,0.1288159,other,no
+00013421_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.6820183,0.009175339,0.12774028,other,no
+00013421_000.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.6620483,0.009358679,0.12830669,other,no
+00013421_000.png,blank,"No.
+",-5.747856,0.0031794703,0.6043257,no,no
+00013640_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.420706,0.0044045374,0.14362311,other,no
+00013640_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.3303375,0.004819099,0.12907389,other,no
+00013640_000.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.1173763,0.0059560356,0.11620116,other,no
+00013640_000.png,blank,"No.
+",-5.7078667,0.0033087626,0.631505,no,no
+00013643_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.6328697,0.0035655333,0.19233209,other,no
+00013643_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.702297,0.0033271809,0.17465198,other,no
+00013643_000.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-3.9874287,0.018209605,0.10247206,other,no
+00013643_000.png,blank,"No.
+",-5.6986485,0.0033393025,0.5743066,no,no
+00013980_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.3587513,0.0046847295,0.04663518,other,no
+00013980_000.png,growth 0,"Based on the chest X-ray image, it is difficult to definitively determine if there is cardiomegaly. The heart size appears to be within normal limits,",-3.2315845,0.03799429,0.02054605,other,other
+00013980_000.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-0.55101585,0.36562878,0.015067837,other,no
+00013980_000.png,blank,"No.
+",-5.68486,0.0033855073,0.60194796,no,no
+00014343_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.5578556,0.0103757335,0.11631383,other,no
+00014343_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-3.8778439,0.020275783,0.10339454,other,no
+00014343_000.png,growth 0.06,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",-1.7637043,0.146327,0.05760498,other,no
+00014343_000.png,blank,"No.
+",-5.6163063,0.003624867,0.60201734,no,no
+00014637_002.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.066183,0.006266923,0.074683614,other,no
+00014637_002.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-1.5173569,0.17985106,0.030499134,other,no
+00014637_002.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",4.538019,0.98941857,0.1787058,other,no
+00014637_002.png,blank,"No.
+",-5.6163063,0.003624867,0.60201734,no,no
+00014666_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-3.001566,0.04735518,0.084534936,other,no
+00014666_000.png,growth 0,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",-0.028718948,0.49282077,0.05438404,other,no
+00014666_000.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size seems enlarged compared to the chest cavity.
+",12.678921,0.9999969,0.8307533,yes,yes
+00014666_000.png,blank,"No.
+",-5.7032166,0.0033241336,0.63148004,no,no
+00014779_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.0403805,0.006429678,0.09355668,other,no
+00014779_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.464369,0.0113809435,0.09293119,other,no
+00014779_000.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.25041,0.014057943,0.07442255,other,no
+00014779_000.png,blank,"No.
+",-5.612072,0.003640192,0.6035231,no,no
+00014976_001.png,original,"Yes, there appears to be cardiomegaly in this image. The heart size appears to be enlarged.
+",13.394085,0.99999845,0.8117933,yes,yes
+00014976_001.png,growth 0,"Yes, there appears to be cardiomegaly in this image. The heart size appears to be enlarged.
+",14.99528,0.99999964,0.90198654,yes,yes
+00014976_001.png,growth 0.06,"Yes, there appears to be cardiomegaly in the image. The heart size appears to be enlarged.
+",15.997091,0.9999999,0.93816245,yes,yes
+00014976_001.png,blank,"No.
+",-5.658909,0.003474207,0.604436,no,no
+00015170_005.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.26112,0.005162698,0.08334869,other,no
+00015170_005.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.152727,0.005750353,0.0743441,other,no
+00015170_005.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.4471073,0.011576806,0.065781385,other,no
+00015170_005.png,blank,"No.
+",-5.8161793,0.0029701174,0.6064158,no,no
+00015391_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.901993,0.0073769344,0.082970396,other,no
+00015391_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-2.8851852,0.052890785,0.033418126,other,no
+00015391_000.png,growth 0.06,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",-1.4711437,0.18676883,0.023574587,other,no
+00015391_000.png,blank,"No.
+",-5.4260063,0.0043813544,0.6569284,no,no
+00016023_004.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.154358,0.0057410365,0.104616314,other,no
+00016023_004.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.028841,0.006503817,0.10432409,other,no
+00016023_004.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.0390034,0.006438481,0.07460345,other,no
+00016023_004.png,blank,"No.
+",-5.7131996,0.003291222,0.5755553,no,no
+00016229_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.0273705,0.006513326,0.06642838,other,no
+00016229_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-3.327488,0.034640133,0.04769814,other,no
+00016229_000.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-1.7071514,0.15353356,0.02943218,other,no
+00016229_000.png,blank,"No.
+",-5.658909,0.003474207,0.604436,no,no
+00017128_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.468313,0.004200622,0.083238274,other,no
+00017128_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.6597786,0.009379746,0.0742082,other,no
+00017128_000.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.444664,0.011604799,0.058991164,other,no
+00017128_000.png,blank,"No.
+",-5.7032166,0.0033241336,0.63148004,no,no
+00017419_000.png,original,"Based on the chest X-ray image, it is difficult to definitively determine if there is cardiomegaly. The heart size appears to be within normal limits,",-3.4657726,0.03030195,0.03335128,other,other
+00017419_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",3.0601597,0.9552191,0.060945205,other,no
+00017419_000.png,growth 0.06,"Based on the chest X-ray image, there is some evidence of cardiomegaly. The heart appears to be enlarged, particularly the left ventricle.
+
+Therefore",7.1349106,0.99920386,0.2892667,other,other
+00017419_000.png,blank,"No.
+",-5.633747,0.0035624176,0.6052319,no,no
+00017467_011.png,original,"Based on the chest X-ray image, there is no clear evidence of cardiomegaly. The heart size appears to be within normal limits.
+",-3.6304379,0.025820224,0.07533951,other,no
+00017467_011.png,growth 0,"Based on the chest X-ray image, there is no clear evidence of cardiomegaly. The heart size appears to be within normal limits.
+",-2.4394035,0.08021691,0.05611225,other,no
+00017467_011.png,growth 0.06,"Based on the chest X-ray image, there is no clear evidence of cardiomegaly. The heart size appears to be within normal limits.
+",-3.1173038,0.042399105,0.06763176,other,no
+00017467_011.png,blank,"No.
+",-5.6328754,0.0035655128,0.60202026,no,no
+00017512_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.941414,0.0070938086,0.08317045,other,no
+00017512_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.1888256,0.014937569,0.05241578,other,no
+00017512_000.png,growth 0.06,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",-0.5693474,0.36138746,0.020615987,other,no
+00017512_000.png,blank,"No.
+",-5.5990505,0.0036877268,0.604379,no,no
+00017758_000.png,original,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",-0.95905304,0.27706784,0.06114147,other,no
+00017758_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",6.059881,0.9976707,0.3651141,other,no
+00017758_000.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size seems enlarged compared to the chest cavity.
+",13.986743,0.99999917,0.8903517,yes,yes
+00017758_000.png,blank,"No.
+",-5.810152,0.0029880193,0.68733716,no,no
+00017862_007.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-2.8067818,0.056958802,0.03411558,other,no
+00017862_007.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-1.4719944,0.18663967,0.024158327,other,no
+00017862_007.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",4.086466,0.983479,0.10612478,other,no
+00017862_007.png,blank,"No.
+",-5.6433563,0.0035284695,0.57425636,no,no
+00018117_008.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-0.8026047,0.30946863,0.080542445,other,no
+00018117_008.png,growth 0,"Yes, there appears to be cardiomegaly in this image. The heart size appears to be enlarged.
+",8.02808,0.99967396,0.7199254,yes,yes
+00018117_008.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size appears to be enlarged.
+",12.232126,0.9999951,0.9011945,yes,yes
+00018117_008.png,blank,"No.
+",-5.722807,0.0032598565,0.57549834,no,no
+00018174_000.png,original,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",-1.5538368,0.1745328,0.059357345,other,no
+00018174_000.png,growth 0,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",3.3703327,0.9667644,0.15847522,other,no
+00018174_000.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size seems enlarged relative to the chest cavity.
+",12.860689,0.9999974,0.8612684,yes,yes
+00018174_000.png,blank,"No.
+",-5.5990505,0.0036877268,0.604379,no,no
+00018186_004.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.726763,0.008777366,0.12879767,other,no
+00018186_004.png,growth 0,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",0.08470154,0.5211627,0.05704011,other,no
+00018186_004.png,growth 0.06,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",3.6674328,0.97509426,0.19721168,other,no
+00018186_004.png,blank,"No.
+",-5.6433563,0.0035284695,0.57425636,no,no
+00018267_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-3.8401165,0.021038948,0.04688775,other,no
+00018267_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",3.6996765,0.97586536,0.09525026,other,no
+00018267_000.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size seems enlarged compared to the chest cavity.
+",10.496637,0.99997234,0.6167767,yes,yes
+00018267_000.png,blank,"No.
+",-5.633747,0.0035624176,0.6052319,no,no
+00018283_002.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.1172905,0.016027523,0.09329934,other,no
+00018283_002.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-2.6977615,0.06310557,0.061077986,other,no
+00018283_002.png,growth 0.06,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",-1.2059898,0.23041137,0.041326456,other,no
+00018283_002.png,blank,"No.
+",-5.6366463,0.003552141,0.5742407,no,no
+00018675_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.525959,0.010708417,0.11457631,other,no
+00018675_000.png,growth 0,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",-3.0413704,0.045591503,0.082293436,other,no
+00018675_000.png,growth 0.06,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",0.48526,0.61898917,0.04836889,other,no
+00018675_000.png,blank,"No.
+",-5.6371155,0.003550481,0.5742529,no,no
+00018868_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.3473816,0.004738044,0.12891078,other,no
+00018868_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.4062767,0.0044682655,0.1294347,other,no
+00018868_000.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.045122,0.006399457,0.103587024,other,no
+00018868_000.png,blank,"No.
+",-5.7015324,0.0033297183,0.6337351,no,no
+00019859_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.321747,0.013102709,0.074301764,other,no
+00019859_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.1518135,0.015492073,0.074244216,other,no
+00019859_000.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.0645657,0.016880598,0.06636692,other,no
+00019859_000.png,blank,"No.
+",-5.612072,0.003640192,0.6035231,no,no
+00020065_012.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.9937115,0.0067347875,0.06640829,other,no
+00020065_012.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-2.63204,0.06710462,0.030415583,other,no
+00020065_012.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",1.7218857,0.84837157,0.033724252,other,no
+00020065_012.png,blank,"No.
+",-5.661579,0.003464974,0.6316018,no,no
+00020074_003.png,original,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",-2.3068676,0.09055578,0.03898804,other,no
+00020074_003.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",6.109272,0.99778277,0.2627252,other,no
+00020074_003.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size seems to be enlarged.
+",11.182951,0.99998605,0.69864136,yes,yes
+00020074_003.png,blank,"No.
+",-5.6433563,0.0035284695,0.57425636,no,no
+00020221_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.361923,0.004669963,0.17577434,other,no
+00020221_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.025423,0.0065259393,0.14339209,other,no
+00020221_000.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.9719467,0.006881955,0.12871262,other,no
+00020221_000.png,blank,"No.
+",-5.8161793,0.0029701174,0.6064158,no,no
+00021321_014.png,original,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",-1.3777924,0.2013638,0.039735295,other,no
+00021321_014.png,growth 0,"Yes, there appears to be cardiomegaly in this image. The heart size seems enlarged compared to the chest cavity.
+",8.59672,0.9998154,0.5555509,yes,yes
+00021321_014.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size appears to be enlarged.
+",15.03096,0.99999976,0.91342026,yes,yes
+00021321_014.png,blank,"No.
+",-5.7131996,0.003291222,0.5755553,no,no
+00021334_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.225189,0.0053505595,0.10458937,other,no
+00021334_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.5288467,0.0106778685,0.08315794,other,no
+00021334_000.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.360771,0.012607558,0.083023466,other,no
+00021334_000.png,blank,"No.
+",-5.7098427,0.0033022529,0.5754464,no,no
+00021359_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.4102097,0.0044508046,0.10411181,other,no
+00021359_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.036232,0.0064562336,0.08322532,other,no
+00021359_000.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-3.6870995,0.024432635,0.0589237,other,no
+00021359_000.png,blank,"No.
+",-5.6129875,0.0036368729,0.6034909,no,no
+00021520_000.png,original,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",5.597824,0.99630785,0.302683,other,no
+00021520_000.png,growth 0,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",2.108549,0.8917314,0.07002541,other,no
+00021520_000.png,growth 0.06,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",6.787422,0.9988734,0.33509007,other,no
+00021520_000.png,blank,"No.
+",-5.5955524,0.0037006014,0.5734785,no,no
+00021572_022.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-3.2648373,0.036797374,0.029653931,other,no
+00021572_022.png,growth 0,"Based on the chest X-ray image, there is evidence of cardiomegaly. The heart appears enlarged.
+",10.022896,0.99995565,0.4318696,other,other
+00021572_022.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size seems enlarged relative to the chest cavity.
+",13.261286,0.9999982,0.6739573,yes,yes
+00021572_022.png,blank,"No.
+",-5.856682,0.0028525598,0.60515934,no,no
+00022065_031.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly (enlarged heart). The heart size appears within normal limits.
+",-5.996191,0.0024820357,0.17779371,other,no
+00022065_031.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-5.206009,0.0054536103,0.1575025,other,no
+00022065_031.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-3.6121578,0.026284037,0.11529421,other,no
+00022065_031.png,blank,"No.
+",-5.7131996,0.003291222,0.5755553,no,no
+00022227_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.716915,0.0032790564,0.15960059,other,no
+00022227_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.328102,0.0048298314,0.14375602,other,no
+00022227_000.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.2465725,0.0052379547,0.14320458,other,no
+00022227_000.png,blank,"No.
+",-5.5813503,0.0037533343,0.5742784,no,no
+00022251_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.6215897,0.009741319,0.05923818,other,no
+00022251_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-3.8943634,0.019950217,0.046759494,other,no
+00022251_000.png,growth 0.06,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",-1.2415676,0.22416323,0.019600421,other,no
+00022251_000.png,blank,"No.
+",-5.6273994,0.003585021,0.5757066,no,no
+00022617_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-3.4850426,0.029740823,0.05312516,other,no
+00022617_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-1.2064323,0.23033293,0.031917807,other,no
+00022617_000.png,growth 0.06,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",5.1463127,0.9942128,0.23828857,other,no
+00022617_000.png,blank,"No.
+",-5.661579,0.003464974,0.6316018,no,no
+00023514_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.5163975,0.010810186,0.1285446,other,no
+00023514_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-2.4330997,0.080683246,0.06919855,other,no
+00023514_000.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-1.4818878,0.18514244,0.060398497,other,no
+00023514_000.png,blank,"No.
+",-5.639473,0.00354215,0.6352807,no,no
+00023982_000.png,original,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",2.0582638,0.88678,0.07079974,other,no
+00023982_000.png,growth 0,"Yes, there appears to be cardiomegaly in this image. The heart size seems to be enlarged relative to the chest cavity.
+",8.952511,0.99987054,0.4904355,yes,yes
+00023982_000.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size seems to be enlarged relative to the chest cavity.
+",10.882235,0.99998116,0.64255184,yes,yes
+00023982_000.png,blank,"No.
+",-5.6366463,0.003552141,0.5742407,no,no
+00024072_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.2503643,0.0052182344,0.1749622,other,no
+00024072_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.6481533,0.009488383,0.11505231,other,no
+00024072_000.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.3944664,0.012194913,0.113970555,other,no
+00024072_000.png,blank,"No.
+",-5.6890965,0.003371244,0.635326,no,no
+00024301_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-3.727644,0.02348464,0.052928433,other,no
+00024301_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",0.44939995,0.6104966,0.024443615,other,no
+00024301_000.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",1.6652794,0.8409454,0.037322663,other,no
+00024301_000.png,blank,"No.
+",-5.6433563,0.0035284695,0.57425636,no,no
+00024896_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.6320457,0.00964097,0.093186624,other,no
+00024896_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-3.9570007,0.018761648,0.083087705,other,no
+00024896_000.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-2.794098,0.057643946,0.060790148,other,no
+00024896_000.png,blank,"No.
+",-5.6371155,0.003550481,0.5742529,no,no
+00025135_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.7851734,0.0030633644,0.10469074,other,no
+00025135_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.522068,0.0039816555,0.09335007,other,no
+00025135_000.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.1733513,0.005633632,0.092886835,other,no
+00025135_000.png,blank,"No.
+",-5.612072,0.003640192,0.6035231,no,no
+00025263_006.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.471073,0.004189093,0.19353898,other,no
+00025263_006.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.4468956,0.011579229,0.15637559,other,no
+00025263_006.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.009245,0.017823646,0.11371756,other,no
+00025263_006.png,blank,"No.
+",-5.856682,0.0028525598,0.60515934,no,no
+00025673_000.png,original,"Based on the chest X-ray image, it appears that the heart size is slightly enlarged. Therefore, the answer is yes.
+",3.5319557,0.9715835,0.06039281,other,yes
+00025673_000.png,growth 0,"Based on the chest X-ray image, there is some evidence of cardiomegaly. The heart appears to be enlarged, particularly the left ventricle.
+
+Therefore",7.225048,0.9992724,0.28933072,other,other
+00025673_000.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size seems enlarged compared to the chest cavity.
+",13.059332,0.99999785,0.7947183,yes,yes
+00025673_000.png,blank,"No.
+",-5.604311,0.0036684491,0.5743918,no,no
+00026876_010.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.7868233,0.0030583297,0.12936537,other,no
+00026876_010.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.2448254,0.014135559,0.064528376,other,no
+00026876_010.png,growth 0.06,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",-3.169012,0.04034865,0.03659834,other,no
+00026876_010.png,blank,"No.
+",-5.784548,0.0030652757,0.632788,no,no
+00027155_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.3860474,0.0045591597,0.0836941,other,no
+00027155_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.365015,0.012554836,0.052788757,other,no
+00027155_000.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-3.65802,0.025135433,0.047194313,other,no
+00027155_000.png,blank,"No.
+",-5.661579,0.003464974,0.6316018,no,no
+00027398_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.8850346,0.0075021554,0.09221879,other,no
+00027398_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.138094,0.015702723,0.07306619,other,no
+00027398_000.png,growth 0.06,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",2.3242493,0.91086555,0.06156802,other,no
+00027398_000.png,blank,"No.
+",-5.67544,0.0034174414,0.57507324,no,no
+00028191_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.676073,0.0034152854,0.17366453,other,no
+00028191_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.03512,0.0064633708,0.113442756,other,no
+00028191_000.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.6486473,0.009483742,0.10101385,other,no
+00028191_000.png,blank,"No.
+",-5.6328754,0.0035655128,0.60202026,no,no
+00028330_009.png,original,"Based on the chest X-ray image, there is no clear evidence of cardiomegaly. The heart size appears within normal limits.
+",-5.9553623,0.002585204,0.29682273,other,no
+00028330_009.png,growth 0,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",-0.2105217,0.4475631,0.103135325,other,no
+00028330_009.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size appears to be enlarged.
+",9.664375,0.99993646,0.8254529,yes,yes
+00028330_009.png,blank,"No.
+",-5.7015324,0.0033297183,0.6337351,no,no
+00028644_007.png,original,"Based on the chest X-ray image, there is evidence of cardiomegaly. The heart appears to be enlarged.
+",4.195139,0.98515505,0.13163193,other,other
+00028644_007.png,growth 0,"Yes, there appears to be cardiomegaly in this image. The heart size seems enlarged compared to the chest cavity.
+",12.810547,0.99999726,0.8488188,yes,yes
+00028644_007.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size appears to be enlarged.
+",15.662678,0.9999999,0.95691186,yes,yes
+00028644_007.png,blank,"No.
+",-5.6428356,0.0035303007,0.60352,no,no
+00028785_004.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-3.9615936,0.018677277,0.092281975,other,no
+00028785_004.png,growth 0,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",5.834324,0.9970831,0.36182624,other,no
+00028785_004.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size appears to be enlarged relative to the chest cavity.
+",14.914905,0.99999964,0.9213716,yes,yes
+00028785_004.png,blank,"No.
+",-5.7032166,0.0033241336,0.63148004,no,no
+00028870_002.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.065405,0.006271771,0.0921046,other,no
+00028870_002.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-4.589712,0.010053678,0.05247859,other,no
+00028870_002.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-3.6997566,0.024132753,0.04187757,other,no
+00028870_002.png,blank,"No.
+",-5.6756477,0.0034167336,0.5757174,no,no
+00029006_001.png,original,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",4.1687107,0.98476356,0.14318416,other,no
+00029006_001.png,growth 0,"Based on the chest X-ray image, the heart size appears to be within normal limits. Therefore, the answer is no.
+",3.4121284,0.9680815,0.09368015,other,no
+00029006_001.png,growth 0.06,"Yes, there appears to be cardiomegaly in this image. The heart size seems enlarged relative to the chest cavity.
+",11.780859,0.9999924,0.6985692,yes,yes
+00029006_001.png,blank,"No.
+",-5.5803394,0.0037571162,0.6021108,no,no
+00029169_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.193527,0.005521729,0.11614081,other,no
+00029169_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-2.5855007,0.07007741,0.04333659,other,no
+00029169_000.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-2.4096508,0.08243973,0.03470921,other,no
+00029169_000.png,blank,"No.
+",-5.6328754,0.0035655128,0.60202026,no,no
+00029901_000.png,original,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears within normal limits.
+",-5.080963,0.0061755464,0.11404613,other,no
+00029901_000.png,growth 0,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-3.4938679,0.029487213,0.07353734,other,no
+00029901_000.png,growth 0.06,"Based on the chest X-ray image, there is no obvious cardiomegaly. The heart size appears to be within normal limits.
+",-1.6030922,0.16754988,0.042026725,other,no
+00029901_000.png,blank,"No.
+",-5.6756477,0.0034167336,0.5757174,no,no

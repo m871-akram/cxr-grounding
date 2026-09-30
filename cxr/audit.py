@@ -342,13 +342,20 @@ def decode(args: argparse.Namespace) -> None:
         texts += processor.batch_decode(out[:, inputs["input_ids"].shape[1]:], skip_special_tokens=True)
     s = p_yes(model, processor, images, question, args.batch_size)
     table = pd.DataFrame(rows).assign(text=texts, log_odds=s[:, 0], p_yes=s[:, 1], yes_no_mass=s[:, 2])
-    first = table["text"].str.lower().str.extract(r"([a-z]+)", expand=False)
+    text = table["text"].str.lower()
+    first = text.str.extract(r"([a-z]+)", expand=False)  # the answer's first word
     table["answer"] = first.where(first.isin(["yes", "no"]), "other")
+    # MedGemma 1.5 often answers in a sentence ("Based on the chest X-ray image, there is no ..."):
+    # the first standalone yes or no anywhere in the answer, as a second reading
+    table["answer_in_text"] = text.str.extract(r"\b(yes|no)\b", expand=False).fillna("other")
     table.to_csv(RESULTS / f"decode_{args.model}.csv", index=False)
+    agree = lambda g, col: ((g[col] == "yes") == (g["p_yes"] > 0.5))[g[col] != "other"].mean()
     summary = table.groupby("condition", sort=False).apply(lambda g: pd.Series({
         "n": len(g), "share_answer_yes_or_no": (g["answer"] != "other").mean(),
         "share_answer_yes": (g["answer"] == "yes").mean(), "share_p_yes_above_05": (g["p_yes"] > 0.5).mean(),
-        "agreement_where_yes_or_no": ((g["answer"] == "yes") == (g["p_yes"] > 0.5))[g["answer"] != "other"].mean(),
+        "agreement_where_yes_or_no": agree(g, "answer"),
+        "share_yes_or_no_in_text": (g["answer_in_text"] != "other").mean(),
+        "agreement_in_text": agree(g, "answer_in_text"),
         "median_yes_no_mass": g["yes_no_mass"].median()}), include_groups=False)
     print(summary.round(3).to_string())
     print("Most common first words of the other answers:", first[table["answer"] == "other"].value_counts().head(5).to_dict())
@@ -360,7 +367,7 @@ def main() -> None:
     g = sub.add_parser("decode", help="Greedy answers against the score, per condition")
     g.add_argument("--model", choices=list(MODELS), required=True)
     g.add_argument("--n", type=int, default=100, help="Dose films (each gives 4 images)")
-    g.add_argument("--max-new-tokens", type=int, default=12)
+    g.add_argument("--max-new-tokens", type=int, default=32)
     g.add_argument("--batch-size", type=int, default=16)
     g.set_defaults(func=decode)
     b = sub.add_parser("boscheck", help="Scores with one vs two <bos> tokens on the smoke films, both models")

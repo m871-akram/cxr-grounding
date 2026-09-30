@@ -706,3 +706,101 @@ answers "yes" to any of the 980 blank images: the highest P(yes) on a blank is 0
 thresholds, not a text prior. Also, 4B's jump on the smallest cardiomegaly edit holds for "Is there
 cardiomegaly?" only: for "Is the heart enlarged?" its median P(yes) stays at 0.0006 at growth 0.06
 (`results/dose_scores_4b.csv`).
+
+**2026-09-30, re-score of every MedGemma score (RTX PRO 6000).** Until now every input carried two
+<bos> tokens (the chat template's text starts with one and the tokenizer added another), P(yes) came
+from bf16 logits and was rounded to 5 decimals, and thresholds were rounded to 4 (the 4B effusion
+first-phrasing threshold was stored as 0.0, which emptied that stratum). The code now tokenizes with
+one <bos> and asserts it, computes the yes/no logits in float32 from the output layer's input
+(checked against the model's own logits: at most 0.124 apart, bf16 rounding), stores the log-odds d
+unrounded and fits thresholds on d (commit 7621be3; the decode reading below was added in the same
+session and is committed with these results). Every audit, dose and follow-up image and the day-1
+smoke films were re-scored, both models, and the notebooks were rerun; the old tables are at commit
+cf55429 (h3_base.csv at bba95af). The dated entries above keep the numbers they were based on.
+- Effect of the second <bos> alone (`results/bos_check.csv`, smoke films): for 4B, AUROC moves by at
+  most 0.013 and 97-99% of answers stay on the same side of 0.5; for 1.5 the log-odds fall by 1.1-1.5
+  on average, 3.5-10.5% of answers change side, AUROC moves by at most 0.008.
+- Scores are deterministic: re-scored images match the audit's except 2 of 760 real originals per
+  model (largest log-odds difference 0.062 and 0.070; `dose_determinism.csv`). Provenance: every
+  audited image was written inside the one generation run of 2026-09-29, 16:02-17:39 UTC
+  (`provenance_check.txt`).
+- Decoded answers (`decode_4b.csv`, `decode_1.5-4b.csv`; 100 dose films: originals, growth-0 and
+  growth-0.06 edits, blanks): MedGemma 4B starts with yes/no for 88-100% of images and its answer
+  agrees with its score (P > 0.5) for 98.9-100%. MedGemma 1.5 starts with yes/no for only 4-33% of
+  real and edited films ("Based on the chest X-ray image, ..."); read at the first yes/no anywhere in
+  its answer, it agrees with its score for 93% of originals, 78% of growth-0 edits, 82% of growth-0.06
+  edits and 100% of blanks. 1.5's P(yes) is a ranking score, not its answer.
+
+Numbers above, old -> new (same files):
+- Day-1 smoke AUROC (4B, `medgemma_smoke.csv`): 0.930, 0.930, 0.890, 0.884 -> 0.928, 0.928, 0.885,
+  0.898.
+- Thresholds, P scale (`audit_*_thresholds.csv`): 4B 0.133, 0.0004, 0.0000, 0.0001 -> 0.742, 0.0001,
+  0.00001, 0.00004 (log-odds 1.05, -8.87, -11.12, -10.18); 1.5 0.990, 0.562, 0.095, 0.245 -> 0.694,
+  0.102, 0.023, 0.063.
+- Audit flips (`audit_flips.csv`): under the pre-registered thresholds every eligible addition still
+  flips, now in all 8 strata (4B effusion first phrasing restored: 154/154), n = 137-274, one-sided
+  95% lower bounds 97.8-98.9% (was 100%, n = 143-275, 7 strata). At 0.5: 99-100% -> 98.6-100%
+  (lowest: 289/293, lower bound 96.9%). Shams: 11-24% -> 7.8-22.0% (pre-registered), 2-29% ->
+  2.4-22.6% (0.5). Without the sources the classifiers already scored above their thresholds (43 of
+  308 cardiomegaly; 76 of 179 effusion): additions 98.9-100% (0.5) and 100% (pre-registered),
+  n = 91-261. "Yes/no answers only" now uses the pre-registered pairwise filter (original and edit):
+  4B keeps 137-288 pairs per stratum; MedGemma 1.5 keeps none, because when it starts its answer to an
+  original film with yes or no, the answer is yes.
+- Mean change in log-odds of the additions (`audit_log_odds.csv`): +14 to +25 (bounded by the clipped
+  logit) -> +17.7 to +24.6; shams +0.06 to +2.67 (medians +0.13 to +0.35).
+- Controls (`audit_controls.csv`): at 0.5, neither model says "yes" to any blank or shuffled image;
+  the largest P(yes) on a blank is 0.0009 for 4B and 0.0045 for 1.5 (was 0.0097 and 0.0141). Above
+  4B's pre-registered thresholds: blanks 0%, 67%, 100%, 100% -> 0%, 99.5%, 100%, 100%.
+- Reliability (`audit_reliability.csv`): 4B's P(yes) is below 0.01 for 45-65% of images, of which
+  7-27% have the finding (was 44-64% and 6-26%).
+- Sham breakdown (`audit_sham_breakdown.csv`, `audit_sham_by_ctr_change.csv`): shams that fail the
+  checks flip at 11-17% (CI lower bounds 8-13%) -> 7.5-19.3% (5.3-15.9%); cardiomegaly shams by CTR
+  change: 4-8% at no change and 64-86% above +0.06 -> 5-7% and 68-82%; cardiomegaly no-change shams
+  1.1-6.2% -> 1.2-4.9% (log-odds -0.20 to +0.05); effusion no-change shams 7.7-8.5% -> 3.4-13.3%
+  (4B first phrasing restored at 3.4%), log-odds +0.38 to +0.51 -> +0.13 to +0.39 (CIs above 0);
+  with both classifiers in the no-change rule (item 14): 2.7-13.2%. Gallery list: 12 no-change
+  effusion shams (both classifiers) flip on the re-scored data, 8 of them among the 20 inspected
+  (`effusion_sham_gallery_rescored.csv`); the galleries stay as inspected.
+- Dose run (`dose_effect_by_growth.csv`): 4B's median P(yes) for "Is there cardiomegaly?" goes 0.0001
+  (originals) -> 0.0031 (growth 0) -> 0.905 (0.06), was 0.012 -> 0.976 from growth 0; the share
+  above 0.5 goes 14% -> 39% -> 54%. MedGemma 1.5 at growth 0: 0.743 -> 0.086 (share above 0.5: 38%
+  against 14% on the originals); at 0.06: 0.995 -> 0.849. "Is the heart enlarged?" at 0.06 (4B):
+  0.0006 -> 0.0003.
+- Switch points (`dose_switch_points.csv`), edited films: 4B 0.442, 0.480 -> 0.446, 0.482; 1.5 0.421,
+  0.449 -> 0.444, 0.470 (CIs outside 0.47-0.53: 3 of 4 -> 2 of 4); real films: 4B 0.499, 0.554 ->
+  0.505, 0.560; 1.5 0.459, 0.516 -> 0.485, 0.534 (range 0.459-0.554 -> 0.485-0.560).
+- Blur control (`dose_effusion_blur.csv`): sigma 3 +0.7 to +1.2 -> +0.47 to +0.88; sigma 8 +4.4 to
+  +7.7 -> +3.5 to +6.8; RadEdit shams +0.3 to +0.9 -> +0.19 to +0.80. Films whose lung area falls by
+  less than 5% (`dose_blur_lung_area.csv`, sigma 3): +0.65 to +1.09 -> +0.46 to +0.79 (CIs above 0).
+- Matched CTR (`dose_matched_ctr.csv`): edited minus real P(yes) +0.01 to +0.59, CI above 0 in 15 of
+  16 cells (unchanged); phrasing effect (`dose_phrasing_effect.csv`): +0.055 (0.045-0.067) and
+  +0.057 (0.045-0.072) -> +0.055 (0.044-0.067) and +0.048 (0.037-0.065).
+- Follow-up (`followup_*.csv`): effusion level 0.2 median P(yes) 0.546 and 1.000 -> 0.917 and 0.998
+  (share above 0.5: 56% and 80%), log-odds +12.6 and +10.3 -> +13.1 and +9.7; edits vs blur at the
+  same lung loss +0.27 to +0.90 -> +0.44 to +0.91; cardiomegaly shams at growth 0 and 0.06, 4B: 14%
+  and 16% vs 44% and 57% of edits -> 12% and 16% vs 39% and 54%; edit minus sham +5.5 (4.4-6.8) and
+  +8.4 (7.0-9.9) -> +5.5 (4.3-6.9) and +8.6 (7.1-10.2); 1.5 +3.2 and +5.8 -> +3.1 and +5.9.
+  Costophrenic sharpness, flipped minus unflipped shams: 4B second phrasing -0.009 (79 vs 425) ->
+  +0.003 (-0.073 to +0.077; 96 vs 396); 1.5 +0.013 and -0.032 -> +0.029 (-0.082 to +0.129) and
+  -0.060 (-0.199 to +0.064); 4B first phrasing, restored: -0.106 (-0.287 to +0.055; 40 vs 492).
+  Spearman under blur 0.55 and 0.53 -> 0.56 and 0.52.
+- H3 orientation values (`h3_base.csv`, 4B, trained phrasing): real-film CTR-AUROC 0.862 (unchanged),
+  Brier 0.196 -> 0.189, recalibrated 0.124 -> 0.125, "yes" to edits with CTR <= 0.5 57% -> 55%, tied
+  pairs 1.6% and 15.8% -> 0, NIH-label AUROC 0.918 -> 0.920; edited-film Brier 0.332 -> 0.319, so the
+  orientation bar 0.066 -> 0.064. MedGemma 1.5's median yes/no mass on real films 0.06 -> 0.12 (H3
+  keeps 4B, as decided).
+
+New results (items 12 and 14): 4B answers "yes" to "Is there cardiomegaly?" but "no" to "Is the heart
+enlarged?" for 30% of films at growth 0 and 31% at 0.06, and for 16% of real test films; never the
+reverse (1.5: 28%, 21%, 17%; `dose_phrasing_contradiction.csv`). The full effusion screen passes 0%
+of RadEdit edits at level 0.2 and 28% at level 1.0, and 22% of the blur-only images at sigma 8 (0% at
+sigma 3; `followup_effusion_dose.csv`): the screen is not specific to fluid.
+
+Decisions: none changes. The amended step 1 (no-change shams) applies to no model and finding (4B
+effusion: 3.4%, CI lower bound 0.7%, and 13.3%, 7.8%: not both phrasings); the original step-1
+wording would now apply to all four model and finding pairs, as it did to three before, and stays
+superseded by the amendment. Step 2's condition still holds (2 of 4 edited-film CIs outside
+0.47-0.53) and so does its premise, P(yes) jumping at the first growth step (4B 0.0031 -> 0.905,
+1.5 0.086 -> 0.849); only the detail "1.5 at 0.74 at growth 0" no longer holds (0.086). H3 keeps
+MedGemma 4B. Session: 76 min (16:15-17:31 UTC), about $2.66, including the H3 generation code's
+2-film test (38 images, manifests, a refused rerun with another guidance).

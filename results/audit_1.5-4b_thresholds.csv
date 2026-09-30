@@ -1,5 +1,5 @@
-finding,phrasing,question,threshold,auroc_val
-cardiomegaly,0,Is there cardiomegaly in this image?,0.9903,0.942
-cardiomegaly,1,Is the heart enlarged in this image?,0.5624,0.9269
-effusion,0,Is there pleural effusion in this image?,0.0954,0.8872
-effusion,1,Is there fluid in the pleural space in this image?,0.2452,0.8832
+finding,phrasing,question,threshold_log_odds,threshold,auroc_val
+cardiomegaly,0,Is there cardiomegaly in this image?,0.8176479339599609,0.693736833798726,0.9429
+cardiomegaly,1,Is the heart enlarged in this image?,-2.1747055053710938,0.10204505111698424,0.9335
+effusion,0,Is there pleural effusion in this image?,-3.758678436279297,0.022783348561860532,0.8763
+effusion,1,Is there fluid in the pleural space in this image?,-2.6958255767822266,0.06322012906008713,0.8783
