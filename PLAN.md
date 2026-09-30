@@ -198,6 +198,35 @@ and CTR not up or lung area not down). The original text above stays as it was.
   two strengths on the same films. If P(yes) rises with blur, the drift is lost normal detail
   meeting the "yes" prior, not a RadEdit trace.
 
+**Effusion step 1 outcome, 2026-09-30: no LoRA.** Galleries `results/effusion_sham_flip_{1,2}.jpg`
+(all 20 no-change shams that flip for at least one model and phrasing) and
+`results/effusion_sham_no_flip_{1,2}.jpg` (12 random no-change shams that flip for none), each
+next to its original with the difference map. Checked by Akram, with a second model's reading as
+support: no seams, blocks or hard edges on the mask border; the difference maps show diffuse,
+noise-like change confined to the masks in flipped and unflipped shams alike; in the flipped
+shams the costophrenic angles look softer and greyer than in the originals. With the blur control
+(`results/dose_effusion_blur.csv`: mild blur, no RadEdit, raises the log-odds of "yes" as much as
+the shams do), this supports "lost detail at the lung bases, read as effusion", not a RadEdit
+trace. Reported as a limitation of the shams, not a model failure: MedGemma treats lost sharpness
+at the bases as effusion, which resembles early blunting of the costophrenic angles but also
+means blurry or underexposed bases could produce false positives. The gallery impression is
+measured over all shams in the next pod run (sharpness at the costophrenic angles).
+
+**Post-hoc change to step 2, 2026-09-30: step 2 is not run as a fix.** The rule text above is
+unchanged. Decided after the dose-response results (`results/dose_switch_points.csv`,
+`dose_measures.csv`), before any LoRA was trained.
+- The condition is met: on edited films, 3 of the 4 switch-point CIs (two models x two
+  phrasings) lie outside 0.47-0.53. The rule did not say which phrasing counts.
+- Its premise fails. On edited films P(yes) jumps at the first growth step: MedGemma 4B's median
+  goes from 0.012 to 0.976 while the median CTR goes from 0.434 to 0.456, and MedGemma 1.5's
+  median is already 0.743 at growth 0, where the heart cannot grow. An edited-film switch point is
+  therefore not a CTR threshold. On real films the switch points are 0.459-0.554.
+- A LoRA on CTR-labelled edits, evaluated on RadEdit edits, would learn to discount RadEdit's
+  rendering and would look fixed by construction.
+- Replacement: step 3 (no LoRA on day 4), with the gap between edited and real films reported as
+  a finding. The training question moves to H3, where it is tested on real films against a
+  real-data baseline.
+
 **Day 4, the fix.** Output: before / after table.
 - [ ] `cxr/lora.py`: LoRA on training pairs (patient split), bf16, checkpoints; VQA-RAD training
       samples mixed in to limit forgetting.
@@ -241,7 +270,7 @@ Notebooks run on the Mac and read only the small tables in `results/`; heavy wor
 Rules: stop the pod whenever nothing is running; long runs inside `tmux` with logs in
 `/workspace/logs` (`pod/run.sh`); code goes to the pod and small results come back by `rsync`
 (`pod/sync.sh`), so the pod needs no GitHub credentials.
-Sprint budget: $25-35, and the prepaid balance (auto top-up off) is the hard cap.
+Sprint budget: $70 (raised from $25-35 on 2026-09-30), and the prepaid balance (auto top-up off) is the hard cap.
 
 ## 7. Clinical input
 
