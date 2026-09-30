@@ -253,7 +253,10 @@ unchanged. Decided after the dose-response results (`results/dose_switch_points.
 - [ ] Send the reader-study page to the readers (section 7).
 
 **After the sprint:** reader study results; the second finding if it was cut; pneumothorax;
-leave-one-finding-out test; our own U-Net.
+leave-one-finding-out test; our own U-Net. From the code review of 2026-09-30, not adopted for the
+sprint: repairing RadEdit's released pipeline (keep mask, one-step-late latent) and regenerating the
+edits with it; a radiology-reviewed pilot of the edits; a consistency loss (the same answer for a
+film and its sham) in the LoRA recipe.
 
 ## 5. Analysis notebooks (statistical learning)
 

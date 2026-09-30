@@ -140,3 +140,32 @@ model,phrasing,films,metric,value
 ,,E supply,expected_positive_additions_550_films,1331.0
 ,,E supply,lower_95_550_films,1149.1584
 ,,E supply,expected_positive_shams_550_films,31.8421
+,,edited,share_ctr_above_0525_growth_0.06,0.01
+,,edited,share_ctr_above_0525_growth_0.12,0.1
+,,edited,share_ctr_above_0525_growth_0.18,0.31
+,,edited,share_ctr_above_0525_growth_0.24,0.55
+,,edited,share_ctr_above_0525_growth_0.30,0.7
+,,edited,positives_per_film_margin_mean,1.67
+,,edited,positives_per_film_margin_sd,1.3857
+,,edited,positives_per_film_margin_se,0.1386
+,,edited,negatives_per_film_margin_mean,1.68
+,,edited,sham_share_ctr_above_0525,0.0184
+,,edited,sham_share_ctr_below_0475,0.8474
+,,"E supply, margin",expected_positives_600_films,1002.0
+,,"E supply, margin",lower_95_600_films,825.9785
+,,"E supply, margin",expected_negatives_600_films,1516.4211
+,,"E supply, margin",expected_positives_700_films,1169.0
+,,"E supply, margin",lower_95_700_films,965.7479
+,,"E supply, margin",expected_negatives_700_films,1769.1579
+,,"E supply, margin",expected_positives_750_films,1252.5
+,,"E supply, margin",lower_95_750_films,1035.6392
+,,"E supply, margin",expected_negatives_750_films,1895.5263
+,,"E supply, margin",expected_positives_800_films,1336.0
+,,"E supply, margin",lower_95_800_films,1105.5338
+,,"E supply, margin",expected_negatives_800_films,2021.8947
+,,"R supply, margin",pool_positives_at_most_1,754.8
+,,"R supply, margin",pool_negatives_at_most_1,4455.36
+,,"R supply, margin",pool_positives_at_most_2,1036.32
+,,"R supply, margin",pool_negatives_at_most_2,5604.56
+,,"R supply, margin",pool_positives_at_most_3,1206.32
+,,"R supply, margin",pool_negatives_at_most_3,6265.52
