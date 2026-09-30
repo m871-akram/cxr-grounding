@@ -22,7 +22,8 @@ two are complementary.
 - **H1.** On a large share of valid counterfactual pairs, MedGemma keeps the same answer
   (it answers from text priors, not from the image).
 - **H2.** LoRA fine-tuning on counterfactual pairs raises the flip rate on held-out patients
-  without lowering accuracy on general medical questions (VQA-RAD).
+  without lowering accuracy on general medical questions (VQA-RAD). Replaced on 2026-09-30 by H3
+  (section 4): does fine-tuning on counterfactuals transfer to real films?
 
 ## 2. Pipeline
 
@@ -240,11 +241,213 @@ unchanged. Decided after the dose-response results (`results/dose_switch_points.
   a finding. The training question moves to H3, where it is tested on real films against a
   real-data baseline.
 
+**H3, pre-registered on 2026-09-30, before any training.** Does LoRA fine-tuning on diffusion
+counterfactuals transfer to real films? No training starts before the audit (v1) is public on
+GitHub, so this text is public first; the training data may be generated once it is committed.
+H3 replaces H2 and the day-4 LoRA items (post-hoc change to step 2): no VQA-RAD (the off-target
+check is effusion AUROC), and shams are labelled by their measured CTR, not with the source film's
+answer as planned on day 2. Numbers marked "for orientation" come from the audit's test split
+(`results/h3_base.csv`, `notebooks/04_h3.ipynb`), scored before the 2026-09-30 re-score (two <bos>
+tokens, bf16 logits, P(yes) rounded to 5 decimals; commit cf55429); the re-score entry in the lab
+notebook gives their new values. The verdicts use only the fresh test set below.
+
+*Model, question and label.* MedGemma 4B (`google/medgemma-4b-it`), cardiomegaly only. Not
+MedGemma 1.5: on real test films its first answer token is rarely "yes" or "no" (median yes/no
+probability mass 0.06, against 0.97 for 4B), so its P(yes) is a ranking score rather than its
+answer, and any training would first change its answer format. Training uses one question, "Is
+there cardiomegaly in this image?", with the audit's prompt (the question followed by " Answer yes
+or no.", no system message), tokenized with a single <bos>: until 2026-09-30 the audit's code added
+a second one, and the re-score of every earlier image fixes it. It is the primary question for
+every metric; "Is the heart enlarged in this image?" is evaluated as a transfer check. Every label, in training and in the primary
+metric, is the segmenter's CTR > 0.5 (TorchXRayVision PSPNet, as in the edit checks); CTR <= 0.5 is
+"no", and films without a segmenter CTR are left out.
+
+*Patients and test sets.* All splits come from the md5 hash h of the patient ID (`cxr/data.py`):
+- training pool: train-split patients with h >= 0.32;
+- validation: the existing val split (0.1 <= h < 0.2);
+- fresh test set, H3's primary test set: train-split patients with 0.2 <= h < 0.32, about 15% of
+  train patients (about 1.2 times the test split's 974 patients and 1,880 PA films). It is
+  reserved before any H3 generation, and none of its films or edits is scored, measured or
+  inspected before the final evaluation;
+- the test split (h < 0.1): our decisions so far were made after looking at it, so it becomes a
+  secondary, exploratory evaluation.
+No patient is in two of these sets.
+
+*Arms.* The training examples are drawn once (seed 0) and are the same for every training seed.
+Training examples with a segmenter CTR within 0.025 of 0.5 (the segmenter's mean difference from
+CheXmask) are dropped in every arm: "yes" means CTR > 0.525 and "no" CTR < 0.475. Evaluation keeps
+them, and every metric is also reported without them.
+- R: 2,000 real PA films of the training pool, 1,000 "yes" and 1,000 "no". The pool holds every
+  converted film, whatever its NIH label (normal, effusion, pneumothorax, cardiomegaly), so the
+  negatives are not only normal films. Each patient contributes at most 3 films, drawn at random
+  before the CTR is looked at. Supply: on the test split, with the same rules, the expected pool
+  holds about 1,210 "yes" films (one film per patient would give only about 750).
+- E: 2,000 RadEdit images of normal source films of the training pool (CheXmask CTR < 0.5, one
+  per patient, taken in a random order, seed 0), 1,000 "yes" and 1,000 "no": the addition at
+  growths 0.06, 0.12, 0.18, 0.24 and 0.30 (prompt "Cardiomegaly", as in the dose run) and one sham
+  per film (normal prompt, 0.30 mask, as in the audit), each labelled by its own CTR; no real film,
+  and no image used twice. Supply: on the 100 test dose films, 1%, 10%, 31%, 55% and 70% of the
+  additions at these growths have CTR > 0.525, 1.67 per film (SD 1.39, SE 0.14), and 1.8% of the
+  380 test shams do. 750 source films (4,500 RadEdit runs) give an expected 1,253 "yes" images
+  (lower 95% bound 1,036, counting both the uncertainty of the rate and the film-to-film variation)
+  and about 1,900 "no" images. If there are fewer than 1,000 of either, more source films are added
+  in the same order.
+- R+E: augmentation, as in RoentMod: all 2,000 films of R plus all 2,000 images of E (4,000
+  examples, 2,000 per class).
+If R cannot reach 1,000 films of a class, N shrinks to twice the smaller count for all three arms.
+
+*Training.* Every arm trains for at most 750 optimizer steps with the same schedule (batch 16: 6
+epochs of R or E, 3 of R+E), so R+E's larger data set does not come with a longer budget or a
+higher learning rate at a given step. LoRA (peft) on the language model's q, k, v, o, gate, up and
+down projections, selected by module path, since the vision encoder has layers with the same
+names; the vision encoder and the multimodal projector are frozen. The names of all trainable
+parameters are written to the run log and checked before training starts: none may belong to the
+vision encoder or the projector. Rank 16, alpha 32, dropout 0.05. Loss: binary cross-entropy on the
+audit's log-odds d = logsumexp(yes-token logits) - logsumexp(no-token logits) at the first answer
+position (yes tokens "Yes", "yes", " Yes", " yes", and the same for no, as in `cxr/audit.py`); no
+other position is trained. AdamW, learning rate 1e-4, no weight decay, cosine schedule over 750
+steps with 5% warmup, bf16 base weights. Images take the audit's path (512-px PNG, resized to 896 px
+by the processor). Three training seeds per arm (0, 1, 2) set the LoRA initialisation, the data
+order and dropout.
+
+*Validation and early stopping.* R and R+E: real val-split films (at most 3 per patient, drawn at
+random), all those with CTR > 0.525 and as many with CTR < 0.475. E: the RadEdit images of 60
+val-split normal source films, made like E's (360 images, the same margin applied); E's checkpoint
+is selected on these edited images only, so E never sees a real film for training or model
+selection. The validation loss (the training loss, each class weighted 1/2) is computed in eval mode
+every 50 steps; training stops after 3 evaluations without improvement, and the best checkpoint is
+kept (at most 15 evaluations). E's checkpoints are also scored on R's real validation films at each
+evaluation; E's best checkpoint on those films enters only a robustness check of H3.1, never the
+primary selection.
+
+*Reproducibility of the images.* Every generation run writes a manifest next to its images: a
+hash of its settings (prompt, mask, growth, guidance, skip ratio, steps, feather, the ordered list
+of source films), the seed, the git commit of the code, and the Hugging Face revisions of RadEdit's
+UNet and custom pipeline (`microsoft/radedit`), the VAE (`stabilityai/sdxl-vae`) and the text
+encoder (`microsoft/BiomedVLP-BioViL-T`). A run refuses to reuse existing files whose manifest
+differs or that have no manifest. The revisions are pinned: the models are loaded at the commit
+hashes recorded in the manifest; MedGemma 4B's revision is pinned and recorded the same way in the
+training and evaluation logs.
+
+*What freezing means.* Only the language model is adapted, so H3 asks whether the language model
+can learn heart size from the image features MedGemma already produces. R's gain shows how much
+heart-size information those frozen features carry for this recipe. If E does not transfer, either
+E taught RadEdit-specific cues or the frozen features encode heart width poorly; R's gain on the
+same features separates the two only in part.
+
+*Scoring.* Every model, the base included, is scored on the unrounded log-odds d, computed in
+float32, with P(yes) = sigmoid(d) and the yes/no probability mass saved next to it; numbers are
+rounded only in display tables. AUROCs use d; any remaining ties count 1/2. (For orientation: the
+audit's stored P(yes), rounded to 5 decimals, ties 1.6% of positive-negative pairs on real films
+and 15.8% on edited films for the base.)
+
+*Evaluation.* Primary, on the fresh test set, for base, R, E and R+E:
+- real films (all PA films of the fresh test patients with a segmenter CTR): CTR-AUROC (primary);
+  Brier score; switch point and slope (logistic fit as in `notebooks/03b_dose.ipynb`); AUROC
+  against the NIH labels (cardiomegaly vs no finding); yes/no probability mass;
+- fresh edits: 100 normal source films of the fresh test patients (CheXmask CTR < 0.5, one per
+  patient) edited at growths 0, 0.06, 0.12, 0.18, 0.24 and 0.30, plus one sham each at the 0.30
+  mask (700 RadEdit runs, generated with E but not scored or measured before the final
+  evaluation): Brier score (H3.1's first clause); CTR-AUROC; within-growth CTR-AUROC (pairs of the
+  same growth only, so the growth step itself cannot rank them); share of edits with CTR <= 0.5
+  answered "yes"; median P(yes) per growth;
+- the 100 fresh shams and the 100 blank images of the same source films: share of P(yes) > 0.5;
+- off-target: effusion AUROC on the fresh real films (effusion vs no finding, first effusion
+  question);
+- the other cardiomegaly phrasing: the real-film metrics again (transfer check).
+Secondary and exploratory: the same metrics on the test split (its 1,880 real films, the 600 dose
+edits, the 580 cardiomegaly shams and the 380 blanks). Training is 50/50 while real films are about
+23% positive, so Brier, yes-rates and switch points are also reported with the training prior
+removed: d + logit(pi), where pi is the val-split share of CTR > 0.5 for that kind of image.
+
+*Primary metrics and bars.* On real films, CTR-AUROC (the AUROC of d against CTR > 0.5): does the
+model rank films by heart size, whatever its threshold? Recalibration cannot move it, but it moves
+Brier: for orientation, refitting the base's own log-odds to the labels (logistic regression, 5
+folds by patient) takes its real-film Brier from 0.196 to 0.124, with no new information from the
+image, so a Brier bar of 0.05 would be met by recalibration alone. On edited films, H3.1's first
+clause only asks whether E learned its own task, the CTR rule on edits, where the base fails mostly
+by its threshold (for orientation, it answers "yes" to 57% of edits with CTR <= 0.5); that clause
+uses Brier. Gains and bars, with the base scored on the same fresh evaluation set at the final
+evaluation:
+- real-film CTR-AUROC: gain = arm - base; bar = 0.2 x (1 - base) (for orientation, 0.028);
+- edited-film Brier: gain = base - arm; bar = 0.2 x base (for orientation, 0.066).
+A gain "moves" the model if it is at least the bar and its CI lower bound is above 0; it "does not
+move" the model if its CI upper bound is below the bar. For orientation, on the test split the
+PadChest classifier's cardiomegaly score has a CTR-AUROC of 0.877, and the growth step alone ranks
+the edited films at 0.859.
+
+*Statistics.* Each arm's metric is the mean over its 3 seeds; the range of the three per-seed values
+is reported next to it. 95% CIs: 1,000 paired bootstrap resamples of test patients; in each
+resample the base and every seed of every arm are scored on the same patients, the seeds are
+averaged, and the contrasts are formed; percentile intervals. The CIs cover test-patient sampling
+only. Training randomness enters through a second condition: a verdict of supported or falsified
+also needs the deciding contrast, computed with seed k of every arm, to have the same sign for
+k = 0, 1 and 2. H3.1 and H3.2 are two separate tests; each verdict branch is a one-sided test at
+2.5% (the edge of a 95% CI). Everything else (robustness checks, secondary metrics, guards, the
+test-split evaluation) is descriptive, except the robustness checks named as conditions in H3.1.
+
+*Precondition.* R's real-film gain moves the model. If it does not, H3.1 and a supported H3.2 are
+reported as inconclusive: the recipe or the frozen features do not allow it. H3.2 falsified is
+evaluated whatever R does.
+
+*H3.1.* E moves edited films toward the CTR rule but moves real films much less than R does.
+- Supported: E's edited-film gain moves the model, and D = R's real-film gain - 2 x E's real-film
+  gain has a CI entirely above 0 (E's real-film gain is less than half of R's). D's point estimate
+  must also stay above 0 in three robustness checks: against the CheXmask CTR > 0.5 label, an
+  independent measurement of the same films (films without a good CheXmask mask left out); with
+  positive-negative pairs compared only within NIH finding status (no finding, any finding), since R
+  can learn that films with other findings tend to have large hearts and E cannot; and with E taken
+  at its best checkpoint on the real validation films.
+- Falsified, in one of two named ways: "E did not learn the edits" (its edited-film gain does not
+  move the model), or "E transfers" (D's CI entirely below 0: E's real-film gain is more than half
+  of R's).
+- Otherwise inconclusive. The ratio of the two real-film gains is reported as a description.
+
+*H3.2.* R+E is no better than R on real films.
+- Supported: the real-film CTR-AUROC difference, R+E - R, has a CI upper bound below 0.02
+  (non-superiority margin).
+- Falsified, as RoentMod would predict: the CI lower bound is above 0 and the difference is at least
+  0.02. RoentMod (arXiv 2509.08640) reports that "incorporating RoentMod-generated counterfactual
+  images during training" improved "model discrimination across multiple pathologies by 3-19% AUC in
+  internal validation and by 1-11% for 5 out of 6 tested pathologies in external testing", there to
+  counter off-target shortcuts; the 0.02 margin is below its smallest internal gain.
+- Otherwise inconclusive. Secondary, with the same margin: Brier (difference Brier(R) - Brier(R+E))
+  and AUROC against the NIH labels.
+
+*Guards,* reported next to each verdict without changing it; an arm that fires one is not presented
+as a fix: "yes" (prior-corrected) to more than 5% of the blank images, a text prior; an effusion
+AUROC drop of more than 0.02 with a CI excluding 0, forgetting.
+
+*Limitations stated in advance.* Training labels and the primary metric come from the same
+segmenter; the CheXmask check guards against learning its quirks. The NIH-label AUROC can show harm
+but hardly a gain: for orientation, the segmenter's own CTR scores 0.917 on those labels, and the
+base already 0.918. E is evaluated on edits made like its training data, so its edited-film gain is
+in distribution and R's is not; that asymmetry is the point of H3.1. E comes from about 750 normal
+patients, R from patients with any finding. RadEdit's released pipeline ignores the keep mask and
+pastes back a one-step-late latent outside the edit mask; the original pixels are pasted back after
+decoding, which removes both effects outside the mask but not inside it.
+
+*Compute.* RadEdit on the RTX PRO 6000 ($2.09/h; 2.65-2.84 s per edit measured in the dose and
+follow-up runs); training and evaluation on the A100 80 GB when available ($1.59/h), else the RTX
+PRO 6000, priced here at $2.09/h as the upper bound; about 20 MedGemma scores per second.
+- Generation: 5,560 RadEdit runs (E's 4,500, its 360 validation images and the 700 fresh edits) at
+  2.84 s: 4.4 h, plus the segmenter pass on the new edits and the real films of the training pool,
+  the val split and the fresh test set (about 22,500 images, in chunks, about 10 min): about 4.6 h,
+  $9.60.
+- Training: at most 9 x 750 steps x 16 = 108,000 examples at an assumed 6 per second, not yet
+  measured (5.0 h), plus validation (about 0.9 h): at most 5.9 h, $12.40; early stopping should end
+  most runs sooner. The first run measures the rate, and the estimate is updated before the other
+  eight.
+- Evaluation: 10 models (the base and 9 trained) x about 16,000 scores (fresh set and test split):
+  about 2.5 h, $5.20.
+- Total at most about 13 GPU-hours, about $27, within the $70 budget.
+
 **Day 4, the fix.** Output: before / after table.
-- [ ] `cxr/lora.py`: LoRA on training pairs (patient split), bf16, checkpoints; VQA-RAD training
-      samples mixed in to limit forgetting.
-- [ ] Evaluate on held-out patients: flip rate, sham rate, AUROC on originals, VQA-RAD accuracy.
-- [ ] `notebooks/04_lora.ipynb`: paired before / after comparison on the same pairs.
+Superseded by H3 above (post-hoc change to step 2, 2026-09-30); H3 runs after v1 is public.
+- [ ] ~~`cxr/lora.py`: LoRA on training pairs (patient split), bf16, checkpoints; VQA-RAD training
+      samples mixed in to limit forgetting.~~
+- [ ] ~~Evaluate on held-out patients: flip rate, sham rate, AUROC on originals, VQA-RAD accuracy.~~
+- [ ] ~~`notebooks/04_lora.ipynb`: paired before / after comparison on the same pairs.~~
 
 **Day 5, packaging.** Output: public repository.
 - [ ] README: question, key figure, results table with CIs, how to run, limitations, licenses.
