@@ -17,6 +17,9 @@ case "${1:-}" in
       --exclude=.venv/ --exclude=__pycache__/ --exclude=.ipynb_checkpoints/ --exclude=.DS_Store \
       --exclude='CLAUDE*.md' --exclude=/papers/ \
       ./ "$REMOTE/"
+    # The pod has no .git: the commit of the pushed code goes to COMMIT, for run logs and manifests.
+    dirty=$(git diff --quiet HEAD -- . || echo " + uncommitted changes")
+    echo "$(git rev-parse HEAD)$dirty" | ssh cxr-pod "cat > /workspace/cxr-grounding/COMMIT"
     ;;
   pull)
     rsync -rltz "$REMOTE/results/" results/

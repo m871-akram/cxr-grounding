@@ -148,8 +148,8 @@ def run(args: argparse.Namespace) -> None:
 
     for tag, model_id in MODELS.items():
         scores_file = RESULTS / f"dose_scores_{tag}.csv"
-        if scores_file.exists():
-            continue
+        if scores_file.exists() and "log_odds" in pd.read_csv(scores_file, nrows=0).columns:
+            continue  # finished; a table from before the log-odds re-score is scored again
         model, processor = load_medgemma(model_id)
         parts = []
         for finding in ["cardiomegaly", "effusion"]:  # each image gets its own finding's two questions
@@ -162,7 +162,7 @@ def run(args: argparse.Namespace) -> None:
         table = pd.concat(parts, ignore_index=True)
         info = pd.DataFrame([{k: v for k, v in r.items() if k in ("group", "finding", "image", "patient_id", "level")}
                              for r in rows]).reset_index(names="row")
-        table.merge(info, on="row").drop(columns="row").round(5).to_csv(scores_file, index=False)
+        table.merge(info, on="row").drop(columns="row").to_csv(scores_file, index=False)  # unrounded
         del model
         torch.cuda.empty_cache()
     print("Median P(yes), first phrasing:")
@@ -255,8 +255,8 @@ def followup(args: argparse.Namespace) -> None:
         measure(rows, effusion).round(4).to_csv(measures_file, index=False)
     for tag, model_id in MODELS.items():
         scores_file = RESULTS / f"dose2_scores_{tag}.csv"
-        if scores_file.exists():
-            continue
+        if scores_file.exists() and "log_odds" in pd.read_csv(scores_file, nrows=0).columns:
+            continue  # finished; a table from before the log-odds re-score is scored again
         model, processor = load_medgemma(model_id)
         parts = []
         for finding in ["cardiomegaly", "effusion"]:
@@ -266,7 +266,7 @@ def followup(args: argparse.Namespace) -> None:
             s["row"] = [idx[j] for j in s["row"]]
             parts.append(s)
         info = pd.DataFrame([{k: v for k, v in r.items() if k != "path"} for r in rows]).reset_index(names="row")
-        pd.concat(parts, ignore_index=True).merge(info, on="row").drop(columns="row").round(5).to_csv(scores_file, index=False)
+        pd.concat(parts, ignore_index=True).merge(info, on="row").drop(columns="row").to_csv(scores_file, index=False)  # unrounded
         print(f"  {tag}: {len(rows)} images scored", flush=True)
         del model
         torch.cuda.empty_cache()

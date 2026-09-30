@@ -24,6 +24,7 @@ if tmux has-session -t "=$name" 2>/dev/null; then
   exit 1
 fi
 { echo "== $(date '+%F %T') start: $cmd"
+  echo "== code commit: $(cat /workspace/cxr-grounding/COMMIT 2>/dev/null || echo unknown)"
   nvidia-smi --query-gpu=name,memory.total --format=csv,noheader || true
 } >> "$log"
 # The session ends with the command; ${PIPESTATUS[0]} is the command's exit code, not tee's.

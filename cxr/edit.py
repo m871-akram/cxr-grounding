@@ -158,24 +158,28 @@ def edit_film(pipe, original: Image.Image, mask: np.ndarray, prompt: str, guidan
     return np.clip(paste_back(before, after, mask, feather_px), 0, 255).round().astype(np.uint8)
 
 
-def load_radedit(device: str = "cuda"):
+def load_radedit(device: str = "cuda", revisions: dict | None = None):
     """RadEdit exactly as on its model card (UNet, SDXL VAE, BioViL-T text encoder, DDIM), then
-    RadEdit's own editing pipeline on top (custom code from the Hub, hence trust_remote_code)."""
+    RadEdit's own editing pipeline on top (custom code from the Hub, hence trust_remote_code).
+    revisions pins each Hugging Face repo to a commit (H3); without it, the cached main is used."""
     from diffusers import (AutoencoderKL, DDIMScheduler, DiffusionPipeline, StableDiffusionPipeline,
                            UNet2DConditionModel)
     from transformers import AutoModel, AutoTokenizer
 
-    unet = UNet2DConditionModel.from_pretrained("microsoft/radedit", subfolder="unet")
-    vae = AutoencoderKL.from_pretrained("stabilityai/sdxl-vae")
-    text_encoder = AutoModel.from_pretrained("microsoft/BiomedVLP-BioViL-T", trust_remote_code=True)
+    rev = lambda repo: {"revision": revisions[repo]} if revisions else {}
+    unet = UNet2DConditionModel.from_pretrained("microsoft/radedit", subfolder="unet", **rev("microsoft/radedit"))
+    vae = AutoencoderKL.from_pretrained("stabilityai/sdxl-vae", **rev("stabilityai/sdxl-vae"))
+    text_encoder = AutoModel.from_pretrained("microsoft/BiomedVLP-BioViL-T", trust_remote_code=True,
+                                             **rev("microsoft/BiomedVLP-BioViL-T"))
     tokenizer = AutoTokenizer.from_pretrained("microsoft/BiomedVLP-BioViL-T", model_max_length=128,
-                                              trust_remote_code=True)
+                                              trust_remote_code=True, **rev("microsoft/BiomedVLP-BioViL-T"))
     scheduler = DDIMScheduler(beta_schedule="linear", clip_sample=False, prediction_type="epsilon",
                               timestep_spacing="trailing", steps_offset=1)
     base = StableDiffusionPipeline(vae=vae, text_encoder=text_encoder, tokenizer=tokenizer, unet=unet,
                                    scheduler=scheduler, safety_checker=None, requires_safety_checker=False,
                                    feature_extractor=None).to(device)
-    return DiffusionPipeline.from_pipe(base, custom_pipeline="microsoft/radedit", trust_remote_code=True)
+    pinned = {"custom_revision": revisions["microsoft/radedit"]} if revisions else {}
+    return DiffusionPipeline.from_pipe(base, custom_pipeline="microsoft/radedit", trust_remote_code=True, **pinned)
 
 
 def gallery(panels: list, title: str, path, labels: list | None = None) -> None:

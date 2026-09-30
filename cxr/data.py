@@ -230,9 +230,14 @@ def ctr(args: argparse.Namespace) -> None:
 _ZIP: zipfile.ZipFile | None = None  # one handle per worker process
 
 
+def patient_hash(patient_id) -> float:
+    """md5 of the patient ID as a number in [0, 1): the splits (and H3's fresh test set) are ranges of it."""
+    return int(hashlib.md5(str(patient_id).encode()).hexdigest(), 16) / 16**32
+
+
 def patient_split(patient_id, val_frac: float, test_frac: float) -> str:
     """Deterministic split from a hash of the patient ID."""
-    h = int(hashlib.md5(str(patient_id).encode()).hexdigest(), 16) / 16**32
+    h = patient_hash(patient_id)
     if h < test_frac:
         return "test"
     if h < test_frac + val_frac:
