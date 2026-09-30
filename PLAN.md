@@ -183,6 +183,21 @@ rate of 1.0 for valid additions and 11-24% sham flips, so GPU work pauses for:
 3. Else, no LoRA: day 4 becomes the effusion dose-response and the write-up, and the result is
    that MedGemma tracks the anatomy.
 
+**Amendment to step 1, 2026-09-29, made after the sham breakdown (a post-hoc change).** "Shams
+that fail the addition checks" was meant to stand for "shams with no anatomical change". The
+breakdown (`results/audit_sham_breakdown.csv`) shows it also holds partially enlarged hearts:
+cardiomegaly sham flips rise with the sham's CTR change, and a heart that grows without reaching
+CTR 0.5 fails the checks. Training those shams as "no" would teach the model to ignore real
+enlargement. Step 1's test therefore uses shams with no measured change (classifier score not up,
+and CTR not up or lung area not down). The original text above stays as it was.
+- Cardiomegaly: no-change shams flip at 1-6% with a log-odds change near 0, so no sensitivity to
+  editing traces; the dose-response decides between steps 2 and 3.
+- Effusion: no-change shams flip at 8-9% (log-odds +0.4 to +0.5). Step 1 applies only if the
+  flipping no-change shams show an editing trace when viewed next to their originals. An
+  evidence-loss control runs first: the lung-base mask region blurred (feathered, no RadEdit) at
+  two strengths on the same films. If P(yes) rises with blur, the drift is lost normal detail
+  meeting the "yes" prior, not a RadEdit trace.
+
 **Day 4, the fix.** Output: before / after table.
 - [ ] `cxr/lora.py`: LoRA on training pairs (patient split), bf16, checkpoints; VQA-RAD training
       samples mixed in to limit forgetting.
@@ -394,3 +409,23 @@ flips do not follow the lung-area change, and shams with no measured change stil
 7.7-8.5% with a log-odds change of +0.38 to +0.51 (CI above 0): an editing trace, or a change the
 lung-area check misses. Session: RTX PRO 6000 for 35 min (17:50-18:25 UTC), about $1.21; the pod
 was deleted by hand. Generation earlier: about $4.
+
+**2026-09-29, dose-response and effusion blur control (RTX PRO 6000).** `python -m cxr.dose run`
+on the first 100 cardiomegaly and 100 effusion audit source films and all 1,883 real test films;
+`notebooks/03b_dose.ipynb`. Scores are deterministic: re-scored images match the audit exactly,
+except 2 of 760 real originals for MedGemma 1.5 (largest difference in P(yes) 0.003;
+`results/dose_determinism.csv`). Cardiomegaly (`results/dose_switch_points.csv`,
+`dose_psychometric.png`): the grown-heart mask at growth 0 to 0.30 moves the median segmenter
+CTR from 0.434 to 0.550, but MedGemma's median P(yes) is already 0.976 (4B) and 0.995 (1.5) at
+growth 0.06 (CTR 0.456), and 0.743 for 1.5 at growth 0, the heart's own outline. Switch points on
+edited films: 4B 0.442 (0.435-0.449) and 0.480 (0.475-0.486), 1.5 0.421 (0.413-0.429) and 0.449
+(0.443-0.455) for the two phrasings; on real films: 4B 0.499 (0.488-0.513) and 0.554
+(0.537-0.576), 1.5 0.459 (0.454-0.465) and 0.516 (0.503-0.533). Both models switch at a lower CTR
+on edited films than on real ones, so the edits carry cardiomegaly cues beyond the heart's width.
+Effusion (`results/dose_effusion_blur.csv`): blurring the lung-base mask (no RadEdit) raises the
+log-odds of "yes" by +0.7 to +1.2 at sigma 3 and +4.4 to +7.7 at sigma 8, against +0.3 to +0.9 for
+the RadEdit shams of the same films; at sigma 8 the segmenter also loses 26% of the aerated lung
+in the mask, so strong blur reads as haze, not only as lost detail. MedGemma 1.5 answers "yes" to
+no blank film (`results/audit_controls.csv`), unlike 4B. Galleries of the effusion shams with no
+measured change: `results/effusion_sham_{flip,no_flip}_*.jpg`. Session: 37 min (18:53-19:31 UTC),
+about $1.30; the pod was deleted as soon as the results were pulled.
