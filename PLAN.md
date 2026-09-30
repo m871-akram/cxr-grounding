@@ -212,6 +212,19 @@ at the bases as effusion, which resembles early blunting of the costophrenic ang
 means blurry or underexposed bases could produce false positives. The gallery impression is
 measured over all shams in the next pod run (sharpness at the costophrenic angles).
 
+*Addendum, 2026-09-30, after the measurement.* The measurement does not confirm the impression
+(`results/followup_sharpness_flip.csv`, `notebooks/03c_followup.ipynb`). Over all 600 effusion
+shams, flipped shams lose no more sharpness at the costophrenic angles than unflipped ones:
+differences -0.009 (95% CI -0.097 to +0.072; MedGemma 4B, second phrasing, 79 vs 425 shams),
++0.013 (-0.073 to +0.093) and -0.032 (-0.159 to +0.074) for MedGemma 1.5. The measure itself works:
+it registers the blur control (median loss 0.386 at sigma 3) and the additions (0.374), and under
+blur it tracks MedGemma's change (Spearman 0.55 and 0.53; `followup_sharpness_correlation.csv`).
+Shams barely change the angles (median loss 0.055). So the sham drift is explained neither by the
+lung area, nor by the classifiers, nor by sharpness at the angles; its cause stays open. The
+no-LoRA decision stands on its own criterion (no visible trace), but the explanation above ("lost
+detail at the lung bases") is not supported for the shams. What remains supported is the blur
+result: MedGemma's P(yes) for effusion rises when the bases are blurred.
+
 **Post-hoc change to step 2, 2026-09-30: step 2 is not run as a fix.** The rule text above is
 unchanged. Decided after the dose-response results (`results/dose_switch_points.csv`,
 `dose_measures.csv`), before any LoRA was trained.
@@ -458,3 +471,32 @@ in the mask, so strong blur reads as haze, not only as lost detail. MedGemma 1.5
 no blank film (`results/audit_controls.csv`), unlike 4B. Galleries of the effusion shams with no
 measured change: `results/effusion_sham_{flip,no_flip}_*.jpg`. Session: 37 min (18:53-19:31 UTC),
 about $1.30; the pod was deleted as soon as the results were pulled.
+
+**2026-09-30, follow-up checks (RTX PRO 6000).** `python -m cxr.dose followup` on the dose films,
+after a 2-film smoke test on the pod; `notebooks/03c_followup.ipynb`. Effusion dose-response
+(`results/followup_effusion_dose.csv`): at the thinnest mask (level 0.2) the aerated lung in the
+audit's mask shrinks by a median 2.6%, no edit reaches the 10% check and none passes both
+classifiers, yet MedGemma's median P(yes) is 0.546 (4B) and 1.000 (1.5), a mean log-odds change of
++12.6 and +10.3; at level 1.0 (the audit's edits) 47% reach the 10% check and 29% pass both
+classifiers and the check. At the same measured lung loss, RadEdit effusion edits get a higher
+P(yes) than the blur control in every band, by +0.27 to +0.90 (all CIs above 0;
+`followup_effusion_matched.csv`), so for effusion too MedGemma answers "yes" to what RadEdit paints
+before the checks register it. Cardiomegaly shams at growth 0 and 0.06, same films, masks and
+seeds as the edits (`followup_cardio_shams.csv`): 14% and 16% of shams get P(yes) > 0.5 from 4B
+against 44% and 57% of the edits; the edit adds +5.5 (95% CI 4.4-6.8) and +8.4 (7.0-9.9) log-odds
+over its sham (1.5: +3.2 and +5.8), so the jump is not a paste-back border artifact. The
+"Cardiomegaly" prompt makes the heart denser: the mean gray level inside the original heart
+outline rises by 12.3 (11.2-13.5) at growth 0 and 20.9 at 0.30, against -0.7 to +1.3 for shams
+(`followup_heart_intensity.csv`). Costophrenic sharpness: see the addendum to the effusion step-1
+outcome. RadEdit speed on the RTX PRO 6000: 2.84 s per edit (520 edits in 24.6 min), 2.65 s in the
+dose run (CLAUDE.md records an earlier estimate of about 3.3 s). Session: 42 min (07:29-08:10 UTC), about $1.45; the pod was deleted as soon as the pull was
+confirmed. Spend so far (RunPod billing, before this session): $7.98.
+
+**2026-09-30, correction to the day-3 entry.** That entry reads MedGemma 4B's "yes" rates on blank
+films (67% for "Is the heart enlarged", 100% for both effusion phrasings) as text priors. Those
+rates count blanks above 4B's near-zero Youden thresholds (0.0000-0.0004). At 0.5, neither model
+answers "yes" to any of the 980 blank images: the highest P(yes) on a blank is 0.0097 for 4B and
+0.0141 for 1.5 (`results/audit_4b_test.csv`, `audit_1.5-4b_test.csv`). The blank rates show 4B's
+thresholds, not a text prior. Also, 4B's jump on the smallest cardiomegaly edit holds for "Is there
+cardiomegaly?" only: for "Is the heart enlarged?" its median P(yes) stays at 0.0006 at growth 0.06
+(`results/dose_scores_4b.csv`).

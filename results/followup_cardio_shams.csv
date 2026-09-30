@@ -1,0 +1,4 @@
+growth,n,median_ctr_edit,median_ctr_sham,median_classifier_edit,median_classifier_sham,share_yes_edit_4b,share_yes_sham_4b,sham_ci_4b,log_odds_edit_minus_sham_4b,lo_ci_4b,share_yes_edit_1.5-4b,share_yes_sham_1.5-4b,sham_ci_1.5-4b,log_odds_edit_minus_sham_1.5-4b,lo_ci_1.5-4b
+0.0,100,0.434,0.422,0.046,0.029,0.44,0.14,0.08-0.21,5.517,4.4-6.8,0.58,0.31,0.22-0.40,3.249,2.5-4.1
+0.06,100,0.456,0.429,0.109,0.028,0.57,0.16,0.09-0.23,8.427,7.0-9.9,0.69,0.31,0.22-0.39,5.755,4.8-6.8
+0.3,100,0.55,0.436,0.586,0.05,0.97,0.31,0.22-0.40,16.205,14.7-17.7,0.99,0.39,0.29-0.47,11.419,10.3-12.6

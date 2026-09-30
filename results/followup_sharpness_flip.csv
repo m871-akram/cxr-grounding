@@ -1,0 +1,4 @@
+model,phrasing,n_flip,n_no_flip,mean_loss_flip,mean_loss_no_flip,difference,ci_low,ci_high
+4b,1,79,425,0.04,0.049,-0.009,-0.097,0.072
+1.5-4b,0,75,444,0.054,0.041,0.013,-0.073,0.093
+1.5-4b,1,76,447,0.008,0.04,-0.032,-0.159,0.074

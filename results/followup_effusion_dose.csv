@@ -1,0 +1,8 @@
+images,n,median_lung_area_change,share_loss_10pct,median_pc_effusion,share_pc_above,median_p_yes_4b,mean_d_log_odds_4b,median_p_yes_1.5-4b,mean_d_log_odds_1.5-4b,median_chex_effusion,share_both_classifiers_and_anatomy
+"blur, sigma 3",100,-0.019,0.1,0.073,0.12,0.0,0.745,0.037,1.183,,
+"blur, sigma 8",100,-0.241,0.76,0.434,0.44,0.0,6.23,0.904,6.077,,
+"RadEdit, level 0.2",100,-0.026,0.0,0.128,0.26,0.546,12.584,1.0,10.287,0.082,0.0
+"RadEdit, level 0.4",100,-0.044,0.08,0.52,0.59,1.0,21.409,1.0,15.293,0.123,0.02
+"RadEdit, level 0.6",100,-0.061,0.3,0.622,0.75,1.0,23.549,1.0,16.259,0.193,0.09
+"RadEdit, level 0.8",100,-0.078,0.42,0.727,0.81,1.0,24.198,1.0,16.444,0.285,0.22
+"RadEdit, level 1.0",100,-0.092,0.47,0.842,0.85,1.0,24.578,1.0,16.456,0.492,0.29

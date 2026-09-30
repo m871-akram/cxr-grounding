@@ -103,18 +103,20 @@ def make_images(args, cardio: pd.DataFrame, effusion: pd.DataFrame) -> list[dict
 
 
 def measure(rows: list[dict], effusion: pd.DataFrame) -> pd.DataFrame:
-    """Classifier score (-pc) and segmenter CTR of every image; for effusion rows, the aerated lung
-    area inside the lung-base mask (the edit check's measure)."""
+    """Classifier scores and segmenter CTR of every image; for effusion rows, the aerated lung area
+    inside the audit's lung-base mask (the edit check's measure). classifier_* is the PadChest model
+    (-pc); effusion edits were also checked with the CheXpert one (-chex), hence its effusion score."""
     from .checks import classify, ctr_of, load_classifiers, load_segmenter, segment
 
     images = [np.asarray(Image.open(r["path"]).convert("L")) for r in rows]
-    p = classify({"densenet121-res224-pc": load_classifiers()["densenet121-res224-pc"]}, images)
+    p = classify(load_classifiers(), images)
     hearts, lungs = segment(load_segmenter(), images)
     _, (kind, param), _ = GENERATE["effusion"]
     masks = {film["image"]: tuning_mask(landmarks_512(film), kind, param) for _, film in effusion.iterrows()}
     table = pd.DataFrame([{k: v for k, v in r.items() if k != "path"} for r in rows])
     table["classifier_cardiomegaly"] = p["densenet121-res224-pc:cardiomegaly"].to_numpy()
     table["classifier_effusion"] = p["densenet121-res224-pc:effusion"].to_numpy()
+    table["chex_effusion"] = p["densenet121-res224-chex:effusion"].to_numpy()
     table["ctr"] = [ctr_of(h, l) for h, l in zip(hearts, lungs)]
     table["lung_area_in_mask"] = [(lungs[i] & masks[r["image"]]).sum() if r["finding"] == "effusion" else np.nan
                                   for i, r in enumerate(rows)]
@@ -270,19 +272,20 @@ def followup(args: argparse.Namespace) -> None:
         torch.cuda.empty_cache()
 
     # (c) heart-border intensity: every cardiomegaly dose edit and sham
-    out = []
+    heart_table = []
     for _, film in cardio.iterrows():
         original = np.asarray(Image.open(DATA / "nih512" / film["file"]).convert("L"))
         heart = polygon_mask(landmarks_512(film)[HEART])
         for kind, levels, folder in [("edit", GROWTHS, "cardiomegaly/growth{:.2f}"), ("sham", SHAM_GROWTHS, "cardio_sham/level{:.2f}")]:
             for growth in levels:
                 edited = np.asarray(Image.open(DOSE / folder.format(growth) / film["image"]).convert("L"))
-                out.append({"image": film["image"], "patient_id": film["patient_id"], "kind": kind, "growth": growth,
-                            **heart_intensity(original, edited, heart)})
-    pd.DataFrame(out).round(4).to_csv(RESULTS / "dose_heart_intensity.csv", index=False)
+                heart_table.append({"image": film["image"], "patient_id": film["patient_id"], "kind": kind,
+                                    "growth": growth, **heart_intensity(original, edited, heart)})
+    heart_table = pd.DataFrame(heart_table).round(4)
+    heart_table.to_csv(RESULTS / "dose_heart_intensity.csv", index=False)
 
     # (d) costophrenic-angle sharpness: all effusion test shams and additions, blur control, dose edits
-    out = []
+    angle_table = []
     for i, film in audit_sources("effusion", 600, args.seed).iterrows():
         original = np.asarray(Image.open(DATA / "nih512" / film["file"]).convert("L"))
         points = angle_points(landmarks_512(film))
@@ -293,10 +296,24 @@ def followup(args: argparse.Namespace) -> None:
         before = sharpness(original, points)
         for (kind, level), folder in images.items():
             after = sharpness(np.asarray(Image.open(folder / film["image"]).convert("L")), points)
-            out.append({"image": film["image"], "patient_id": film["patient_id"], "kind": kind, "level": level,
-                        "sharp_right_before": before[0], "sharp_left_before": before[1],
-                        "sharp_right_after": after[0], "sharp_left_after": after[1]})
-    pd.DataFrame(out).round(5).to_csv(RESULTS / "costophrenic_sharpness.csv", index=False)
+            angle_table.append({"image": film["image"], "patient_id": film["patient_id"], "kind": kind, "level": level,
+                                "sharp_right_before": before[0], "sharp_left_before": before[1],
+                                "sharp_right_after": after[0], "sharp_left_after": after[1]})
+    angle_table = pd.DataFrame(angle_table).round(5)
+    angle_table.to_csv(RESULTS / "costophrenic_sharpness.csv", index=False)
+
+    # Short summary for the log (the analysis is in notebooks/03b_dose.ipynb)
+    m = pd.read_csv(measures_file)
+    print(m.groupby(["group", "level"])[["ctr", "classifier_cardiomegaly", "classifier_effusion", "chex_effusion",
+                                         "lung_area_in_mask"]].median().round(3).to_string())
+    for tag in MODELS:
+        s = pd.read_csv(RESULTS / f"dose2_scores_{tag}.csv")
+        print(f"{tag}, median P(yes), first phrasing:",
+              s[s["phrasing"] == 0].groupby(["group", "level"])["p_yes"].median().round(3).to_dict())
+    print(heart_table.groupby(["kind", "growth"])[["change_in_heart", "change_in_border_band"]].mean().round(2).to_string())
+    angle_table["loss"] = 1 - (angle_table["sharp_right_after"] + angle_table["sharp_left_after"]) / (
+        angle_table["sharp_right_before"] + angle_table["sharp_left_before"])
+    print("median sharpness loss at the angles:", angle_table.groupby(["kind", "level"], dropna=False)["loss"].median().round(3).to_dict())
     print("followup done: measures, scores, heart intensity, costophrenic sharpness", flush=True)
 
 

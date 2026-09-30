@@ -1,0 +1,7 @@
+model,images,n,spearman_loss_vs_d_log_odds
+4b,sham,600,0.117
+4b,blur,200,0.551
+4b,edit,600,0.079
+1.5-4b,sham,600,0.18
+1.5-4b,blur,200,0.533
+1.5-4b,edit,600,0.132
