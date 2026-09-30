@@ -2,6 +2,8 @@
 
     python -m cxr.dose run       # dose-response edits, blur control, measures, MedGemma scores
     python -m cxr.dose gallery   # effusion shams listed in results/effusion_sham_gallery.csv
+    python -m cxr.dose followup  # effusion dose-response, cardiomegaly shams at low growth,
+                                 # heart-border intensity, costophrenic-angle sharpness
 
 Cardiomegaly dose-response: the first 100 test source films of the audit (same films, same seeds)
 edited with the grown-heart mask at 6 strengths, from growth 0 (the heart's own outline) to the
@@ -26,11 +28,14 @@ from PIL import Image, ImageFilter
 
 from . import DATA, OUTPUTS, RESULTS
 from .audit import MODELS, load_medgemma, score_images
-from .edit import (GENERATE, edit_film, gallery, grown_heart_mask, landmarks_512, load_films, load_radedit,
-                   paste_back, tuning_mask)
+from .data import HEART
+from .edit import (GENERATE, LEFT_LUNG, NORMAL_PROMPT, RIGHT_LUNG, edit_film, gallery, grown_heart_mask,
+                   landmarks_512, load_films, load_radedit, lung_bases_mask, paste_back, polygon_mask, tuning_mask)
 
 GROWTHS = [0.0, 0.06, 0.12, 0.18, 0.24, 0.30]  # 0.30 = the audit's additions
 BLURS = [3.0, 8.0]  # Gaussian sigma (px at 512) of the evidence-loss control
+LEVELS = [0.2, 0.4, 0.6, 0.8, 1.0]  # effusion: share of the audit mask's depth above the lung base
+SHAM_GROWTHS = [0.0, 0.06, 0.30]  # cardiomegaly shams (0.30 = the audit's shams, reused)
 DOSE = OUTPUTS / "dose"
 
 
@@ -165,6 +170,136 @@ def run(args: argparse.Namespace) -> None:
         print(tag, s.groupby(["group", "finding", "level"], dropna=False)["p_yes"].median().round(3).to_dict(), flush=True)
 
 
+def effusion_level_mask(xy: np.ndarray, level: float) -> np.ndarray:
+    """The audit's lung-base mask with its depth above the base scaled by level (1.0 = the audit's
+    mask: edge at 0.75 of the lung height on the inner side, 0.5 on the outer side)."""
+    _, (_, (medial, lateral, dilate_px)), _ = GENERATE["effusion"]
+    return lung_bases_mask(xy, 1 - (1 - medial) * level, 1 - (1 - lateral) * level, dilate_px)
+
+
+def angle_points(xy: np.ndarray) -> list:
+    """The costophrenic angles: on each CheXmask lung contour, the point that is both lowest and
+    closest to the chest wall (largest sum of the two, each scaled to 0-1 within the lung)."""
+    points = []
+    for lung, wall_on_left in [(RIGHT_LUNG, True), (LEFT_LUNG, False)]:  # the right lung is on the image's left
+        p = xy[lung]
+        (x0, y0), (x1, y1) = p.min(axis=0), p.max(axis=0)
+        t = (p[:, 0] - x0) / (x1 - x0)
+        to_wall = 1 - t if wall_on_left else t
+        points.append(p[np.argmax((p[:, 1] - y0) / (y1 - y0) + to_wall)])
+    return points
+
+
+def sharpness(film: np.ndarray, points: list, half: int = 12) -> list:
+    """Mean gradient magnitude (Sobel) in a 24 x 24 window at each point: a sharp angle has a
+    bright diaphragm next to dark lung, hence strong gradients; blur or haze weakens them."""
+    from skimage.filters import sobel
+
+    g = sobel(film.astype(float) / 255)
+    return [g[max(0, int(y) - half):int(y) + half, max(0, int(x) - half):int(x) + half].mean() for x, y in points]
+
+
+def heart_intensity(original: np.ndarray, edited: np.ndarray, heart: np.ndarray, band_px: int = 6) -> dict:
+    """Mean gray-level change (edited - original) inside the original heart outline, and in a band of
+    +-band_px around its border, where the feathered paste-back meets the heart at low growth."""
+    from skimage.morphology import dilation, disk, erosion
+
+    band = dilation(heart, disk(band_px)) & ~erosion(heart, disk(band_px))
+    diff = edited.astype(float) - original.astype(float)
+    return {"change_in_heart": diff[heart].mean(), "abs_change_in_heart": np.abs(diff[heart]).mean(),
+            "change_in_border_band": diff[band].mean(), "abs_change_in_border_band": np.abs(diff[band]).mean()}
+
+
+def followup(args: argparse.Namespace) -> None:
+    """Checks decided on 2026-09-30 (PLAN.md): (a) effusion dose-response on the first 100 effusion
+    source films (mask depth at 5 levels, 1.0 = the audit's edits, reused); (b) cardiomegaly shams
+    at growth 0 and 0.06 on the dose films, same seeds; both measured and scored like the dose run
+    -> results/dose2_measures.csv, results/dose2_scores_<model>.csv. (c) intensity change inside the
+    heart outline and on its border for every cardiomegaly dose edit and sham
+    -> results/dose_heart_intensity.csv. (d) sharpness at both costophrenic angles, original vs
+    image, for every effusion test sham and addition, the blur control and the effusion dose edits
+    -> results/costophrenic_sharpness.csv."""
+    cardio = audit_sources("cardiomegaly", args.n, args.seed)
+    effusion = audit_sources("effusion", args.n, args.seed)
+    pairs = OUTPUTS / "pairs" / "test"
+    prompt, _, skip = GENERATE["effusion"]
+    pipe, rows = None, []
+    jobs = [(k, film, "effusion_dose", "effusion", level, prompt, effusion_level_mask(landmarks_512(film), level),
+             pairs / "effusion" / "edit" if level == 1.0 else None) for k, film in effusion.iterrows() for level in LEVELS]
+    jobs += [(k, film, "cardio_sham", "cardiomegaly", growth, NORMAL_PROMPT, grown_heart_mask(landmarks_512(film), growth),
+              pairs / "cardiomegaly" / "sham" if growth == 0.30 else None) for k, film in cardio.iterrows() for growth in SHAM_GROWTHS]
+    for n_done, (k, film, group, finding, level, text, mask, reuse) in enumerate(jobs, 1):
+        out = DOSE / group / f"level{level:.2f}" / film["image"]
+        if not out.exists():
+            out.parent.mkdir(parents=True, exist_ok=True)
+            if reuse is not None:  # the audit's own image: same mask, prompt and seed
+                shutil.copy(reuse / film["image"], out)
+            else:
+                if pipe is None:
+                    pipe = load_radedit()
+                    torch.backends.cuda.matmul.allow_tf32 = True
+                original = Image.open(DATA / "nih512" / film["file"])
+                Image.fromarray(edit_film(pipe, original, mask, text, args.guidance, skip, args.steps,
+                                          args.seed + k, args.feather)).save(out)
+        rows.append({"group": group, "finding": finding, "image": film["image"], "patient_id": film["patient_id"],
+                     "level": level, "path": out})
+        if n_done % 100 == 0:
+            print(f"  followup edits: {n_done}/{len(jobs)}", flush=True)
+    del pipe
+    torch.cuda.empty_cache()
+
+    measures_file = RESULTS / "dose2_measures.csv"
+    if not measures_file.exists():
+        measure(rows, effusion).round(4).to_csv(measures_file, index=False)
+    for tag, model_id in MODELS.items():
+        scores_file = RESULTS / f"dose2_scores_{tag}.csv"
+        if scores_file.exists():
+            continue
+        model, processor = load_medgemma(model_id)
+        parts = []
+        for finding in ["cardiomegaly", "effusion"]:
+            idx = [i for i, r in enumerate(rows) if r["finding"] == finding]
+            s = score_images(model, processor, [Image.open(rows[i]["path"]).convert("L") for i in idx], finding,
+                             args.batch_size)
+            s["row"] = [idx[j] for j in s["row"]]
+            parts.append(s)
+        info = pd.DataFrame([{k: v for k, v in r.items() if k != "path"} for r in rows]).reset_index(names="row")
+        pd.concat(parts, ignore_index=True).merge(info, on="row").drop(columns="row").round(5).to_csv(scores_file, index=False)
+        print(f"  {tag}: {len(rows)} images scored", flush=True)
+        del model
+        torch.cuda.empty_cache()
+
+    # (c) heart-border intensity: every cardiomegaly dose edit and sham
+    out = []
+    for _, film in cardio.iterrows():
+        original = np.asarray(Image.open(DATA / "nih512" / film["file"]).convert("L"))
+        heart = polygon_mask(landmarks_512(film)[HEART])
+        for kind, levels, folder in [("edit", GROWTHS, "cardiomegaly/growth{:.2f}"), ("sham", SHAM_GROWTHS, "cardio_sham/level{:.2f}")]:
+            for growth in levels:
+                edited = np.asarray(Image.open(DOSE / folder.format(growth) / film["image"]).convert("L"))
+                out.append({"image": film["image"], "patient_id": film["patient_id"], "kind": kind, "growth": growth,
+                            **heart_intensity(original, edited, heart)})
+    pd.DataFrame(out).round(4).to_csv(RESULTS / "dose_heart_intensity.csv", index=False)
+
+    # (d) costophrenic-angle sharpness: all effusion test shams and additions, blur control, dose edits
+    out = []
+    for i, film in audit_sources("effusion", 600, args.seed).iterrows():
+        original = np.asarray(Image.open(DATA / "nih512" / film["file"]).convert("L"))
+        points = angle_points(landmarks_512(film))
+        images = {("sham", np.nan): pairs / "effusion" / "sham", ("edit", np.nan): pairs / "effusion" / "edit"}
+        if i < args.n:  # the dose films
+            images.update({("blur", s): DOSE / "effusion_blur" / f"sigma{s:g}" for s in BLURS})
+            images.update({("effusion_dose", lv): DOSE / "effusion_dose" / f"level{lv:.2f}" for lv in LEVELS})
+        before = sharpness(original, points)
+        for (kind, level), folder in images.items():
+            after = sharpness(np.asarray(Image.open(folder / film["image"]).convert("L")), points)
+            out.append({"image": film["image"], "patient_id": film["patient_id"], "kind": kind, "level": level,
+                        "sharp_right_before": before[0], "sharp_left_before": before[1],
+                        "sharp_right_after": after[0], "sharp_left_after": after[1]})
+    pd.DataFrame(out).round(5).to_csv(RESULTS / "costophrenic_sharpness.csv", index=False)
+    print("followup done: measures, scores, heart intensity, costophrenic sharpness", flush=True)
+
+
 def make_gallery(args: argparse.Namespace) -> None:
     """Effusion shams with no measured change, as listed on the Mac (results/effusion_sham_gallery.csv):
     original, sham, |difference|, 10 per image; flipping shams first, then a random reference set."""
@@ -200,6 +335,14 @@ def main() -> None:
     r.set_defaults(func=run)
     g = sub.add_parser("gallery", help="Effusion sham gallery from results/effusion_sham_gallery.csv")
     g.set_defaults(func=make_gallery)
+    f = sub.add_parser("followup", help="Effusion dose-response, low-growth shams, heart and angle measures")
+    f.add_argument("--n", type=int, default=100, help="Source films per finding (the dose films)")
+    f.add_argument("--steps", type=int, default=100)
+    f.add_argument("--guidance", type=float, default=15.0)
+    f.add_argument("--feather", type=float, default=3.0)
+    f.add_argument("--batch-size", type=int, default=16)
+    f.add_argument("--seed", type=int, default=0)
+    f.set_defaults(func=followup)
     args = parser.parse_args()
     args.func(args)
 
