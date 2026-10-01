@@ -18,7 +18,8 @@ case "${1:-}" in
       --exclude='CLAUDE*.md' --exclude=/papers/ \
       ./ "$REMOTE/"
     # The pod has no .git: the commit of the pushed code goes to COMMIT, for run logs and manifests.
-    dirty=$(git diff --quiet HEAD -- . || echo " + uncommitted changes")
+    # Untracked code counts as uncommitted; results/ is not pushed, so it does not count.
+    dirty=$([ -z "$(git status --porcelain -- . ':(exclude)results')" ] || echo " + uncommitted changes")
     echo "$(git rev-parse HEAD)$dirty" | ssh cxr-pod "cat > /workspace/cxr-grounding/COMMIT"
     ;;
   pull)

@@ -36,11 +36,13 @@ QUESTIONS = {  # two phrasings per finding; the first is the MedGemma report's w
 }
 
 
-def load_medgemma(model_id: str = MODEL_ID):
+def load_medgemma(model_id: str = MODEL_ID, revision: str | None = None):
+    """MedGemma in bf16 on the GPU, and its processor; revision pins a Hugging Face commit (H3)."""
     from transformers import AutoModelForImageTextToText, AutoProcessor
 
-    model = AutoModelForImageTextToText.from_pretrained(model_id, dtype=torch.bfloat16, device_map="cuda")
-    return model.eval(), AutoProcessor.from_pretrained(model_id)
+    pinned = {"revision": revision} if revision else {}
+    model = AutoModelForImageTextToText.from_pretrained(model_id, dtype=torch.bfloat16, device_map="cuda", **pinned)
+    return model.eval(), AutoProcessor.from_pretrained(model_id, **pinned)
 
 
 def answer_ids(tokenizer) -> dict[str, list[int]]:
@@ -63,9 +65,13 @@ def prompt_for(processor, question: str) -> str:
 def encode(processor, prompt: str, images: list, double_bos: bool = False) -> dict:
     """Tokenize a batch with the same prompt. The chat template's text already starts with <bos>, so
     the tokenizer must not add another (add_special_tokens=False). Until 2026-09-30 it did: every
-    input started with two <bos> tokens. double_bos=True reproduces that, to measure its effect."""
-    return processor(text=[prompt] * len(images), images=[[im] for im in images], return_tensors="pt",
-                     padding=True, add_special_tokens=double_bos)
+    input started with two <bos> tokens. double_bos=True reproduces that, to measure its effect.
+    Scoring and H3 training both build their inputs here, so the check below covers both."""
+    inputs = processor(text=[prompt] * len(images), images=[[im] for im in images], return_tensors="pt",
+                       padding=True, add_special_tokens=double_bos)
+    n_bos = int((inputs["input_ids"][0, :2] == processor.tokenizer.bos_token_id).sum())
+    assert n_bos == (2 if double_bos else 1), inputs["input_ids"][0, :4].tolist()
+    return inputs
 
 
 @torch.inference_mode()
@@ -80,7 +86,6 @@ def p_yes(model, processor, images: list, question: str, batch_size: int, double
     prompt = prompt_for(processor, question)
     ids = answer_ids(processor.tokenizer)
     answer, n_yes = ids["yes"] + ids["no"], len(ids["yes"])
-    bos = processor.tokenizer.bos_token_id
     weight = model.lm_head.weight[answer].float()  # output-layer rows of the yes and no tokens
     captured = {}
     hook = model.lm_head.register_forward_hook(lambda module, args, output: captured.update(h=args[0]))
@@ -88,9 +93,6 @@ def p_yes(model, processor, images: list, question: str, batch_size: int, double
     try:
         for i in range(0, len(images), batch_size):
             inputs = encode(processor, prompt, images[i:i + batch_size], double_bos).to(model.device, dtype=torch.bfloat16)
-            if i == 0:  # exactly one <bos> (two only when reproducing the old inputs)
-                n_bos = int((inputs["input_ids"][0, :2] == bos).sum())
-                assert n_bos == (2 if double_bos else 1), inputs["input_ids"][0, :4].tolist()
             out = model(**inputs, logits_to_keep=1)
             z = captured["h"][:, -1].float() @ weight.T  # answer-token logits in float32 (no cap in this model)
             if i == 0:  # the float32 logits must match the model's own bf16 logits up to bf16 rounding
