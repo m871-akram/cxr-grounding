@@ -442,8 +442,10 @@ PRO 6000, priced here at $2.09/h as the upper bound; about 20 MedGemma scores pe
   about 2.5 h, $5.20.
 - Total at most about 13 GPU-hours, about $27, within the $70 budget.
 
-*Clarifications, 2026-10-01, before any training run* (no H3 model trained; nothing of the fresh
-test set scored or measured):
+*Clarifications, 2026-10-01, before any H3 training run* (written at 09:51 UTC, after the 32-film
+overfit test, and committed in c3959ab at 10:05 UTC; the training runs started at 10:10 UTC, on a pod
+created at 10:09; no H3 model trained; nothing of the fresh test set scored or measured; this heading
+first read "before any training run"):
 - Prior correction: d + logit(pi) applies to the trained arms only, which were trained 50/50; the
   base model is scored as it is. pi is the val split's share of CTR > 0.5 among the films of the
   validation draw (at most 3 per patient, every film with a segmenter CTR, margin not applied) for
@@ -460,10 +462,25 @@ test set scored or measured):
 - The fresh test set holds 2,335 real PA films (counted, not scored or measured), 600 edits, 100
   shams and 100 blanks; the test split holds 1,883 real films, the 600 dose edits, 580 shams and
   380 blanks.
+
+*Clarification added during the training session* (written at 12:12 UTC on 2026-10-01 and committed
+in 1cf72fe at 12:15 UTC, first filed under the heading above; moved here and annotated the same day).
+As written then:
 - Per-seed condition for "H3.1 supported": both of its deciding contrasts must have a positive
   sign for seeds 0, 1 and 2, E's edited-film gain as well as D (the notebook first checked D only).
   When both named ways of falsifying H3.1 hold, both are reported. Decided after a review of
   `notebooks/05_h3_eval.ipynb` on synthetic scores, before any trained arm's scores were looked at.
+
+Its last sentence holds only for the test split and the fresh set: no trained model had been scored
+on either, but validation results printed during training had been seen. When it was written, 8 of
+the 9 runs had finished and the ninth (RE2) was running. Seen by then: R0's first checkpoint (10:13
+UTC); at 11:59 UTC, R2's validation curve (steps 50 to 500) and E2's first three checkpoints, with
+an AUROC close to 1 on the edited validation images and, on the real validation films, a little
+below R2's at the same steps (a first hint that E transfers); at 12:02 UTC, the steps at which the 7
+finished runs had stopped and their best steps. The rule came from the review of the notebook on
+synthetic scores (lab notebook, same day), not from those numbers, but their influence cannot be
+ruled out. It only makes "supported" harder to reach and leaves both falsification conditions as
+they were, so it cannot turn an outcome into "supported".
 
 **Day 4, the fix.** Output: before / after table.
 Superseded by H3 above (post-hoc change to step 2, 2026-09-30); H3 runs after v1 is public.
@@ -482,7 +499,9 @@ Superseded by H3 above (post-hoc change to step 2, 2026-09-30); H3 runs after v1
 leave-one-finding-out test; our own U-Net. From the code review of 2026-09-30, not adopted for the
 sprint: repairing RadEdit's released pipeline (keep mask, one-step-late latent) and regenerating the
 edits with it; a radiology-reviewed pilot of the edits; a consistency loss (the same answer for a
-film and its sham) in the LoRA recipe.
+film and its sham) in the LoRA recipe. Dropped for now on 2026-10-01, as future work: the audit of
+a second medical VLM, Lingshu-7B (first check its license, its `transformers` classes and whether
+ChestX-ray14 is in its training data).
 
 ## 5. Analysis notebooks (statistical learning)
 
@@ -875,8 +894,9 @@ session ran, `notebooks/05_h3_eval.ipynb` was checked against the pre-registrati
 its statistics, a simulated fresh set, and synthetic score tables built to make each verdict branch
 fire (precondition, H3.1 supported, both ways of falsifying it, the robustness checks and per-seed
 signs, H3.2 supported and falsified, the guards). Every branch matched the text except one: "H3.1
-supported" ignored the per-seed sign of E's edited-film gain (a clarification above now requires
-it), and when both ways of falsifying H3.1 held, only the first was reported. Also added, as the
+supported" ignored the per-seed sign of E's edited-film gain (the clarification added during the
+training session now requires it), and when both ways of falsifying H3.1 held, only the first was
+reported. Also added, as the
 text already required: the ratio of the two real-film gains, the prior-corrected switch point,
 edited-film Brier and "yes" rate; the effusion AUROC now uses the real films with a segmenter CTR,
 like every other real-film metric (it included the few without one); and an assertion that the two
@@ -898,8 +918,62 @@ over the base: R +0.059 (95% CI 0.038 to 0.081), E +0.047 (0.023 to 0.074), RE +
 0.090), against a bar of 0.028; E's edited-film Brier gain +0.236 (0.196 to 0.274), bar 0.064. D =
 -0.035 (-0.070 to -0.004), negative for every seed and in the three robustness checks (-0.062,
 -0.026, -0.025): on this split, E's real-film gain is 0.79 of R's, so the notebook reads "H3.1
-falsified: E transfers". RE - R: +0.004 (-0.003 to +0.012), so "H3.2 supported". No guard fires:
+falsified: E transfers". RE's gain over R is +0.004 (CI -0.002 to +0.011): no gain as large as the
+pre-registered 0.02 margin, so the notebook reads "H3.2 supported". No guard fires:
 blanks get no "yes", and effusion AUROC rises slightly in every arm. Training on real films also
 moves the edited films: R's edited-film Brier is 0.153 (base 0.319, E 0.083), and the share of edits
-with CTR <= 0.5 answered "yes" falls from 55% to 31% (E 11%). E answers less often with yes or no on
-real films (median yes/no mass 0.888, 0.714 at its best real-validation checkpoint; base 0.985).
+with CTR <= 0.5 answered "yes" falls from 55% to 31% (E 11%). On real films, E puts less
+probability on yes or no as the first token (median 0.888 vs 0.985 for the base; 0.714 at its best
+real-validation checkpoint).
+
+**2026-10-01, before the final run: fixes from an external audit of the H3 code.** An audit of the
+code and results after training (kept outside the repository, with an earlier audit) made six points.
+They were checked and held; fixed before any fresh-set score existed:
+- (point 2) The scores of E's real-validation checkpoints (E0real-E2real) recorded E's primary
+  checkpoint: its step and its edited-validation draw, while the adapters evaluated had been selected
+  on the real validation films, at other steps. A recording error only: those scores come from the
+  best_real adapters. The committed test-split .json files keep the wrong fields; the corrected
+  record is `results/h3_runs.csv`, written in the final session.
+- (point 3) The training record and the checkpoints are checked before the fresh set is opened.
+  `python -m cxr.lora runs` takes each of the 12 checkpoints, recomputes its step from log.csv (the
+  first lowest validation loss, since a checkpoint is saved at each new minimum), records its
+  selection draw and the SHA-256 of its adapter, and reloads it to recompute its validation loss,
+  which must match the loss logged at that step within 0.001 and be closer to it than to the loss of
+  any other step saved to the same folder (for RE2's best checkpoint, two saved steps are 0.0004
+  apart); it also writes every validation row of every run (`results/h3_curves.csv`). `evaluate`
+  takes the step and draw from that table and refuses an adapter whose hash differs; `run_training`
+  now also records the best_real step and the real-validation draw.
+- (point 4) The chronology of the clarifications is corrected above: the per-seed rule has its own
+  heading, its original wording, its time and what had been seen.
+- (point 6) `evaluate` used to skip any existing score table. Now the .json of each table is its
+  identity (commit, a hash of the settings, a hash of the image list and of every image's bytes,
+  the adapter's hash, and the hashes of the score table and, for the base model, of the measures
+  table it vouches for): an existing table is reused only if all of them match, otherwise the run
+  stops. Tables are written atomically (a temporary file, then a rename), the .json last, and must
+  hold exactly the expected rows, once each, with finite scores. The final run refuses uncommitted
+  code, as before, and now also code that is not the code pushed: `pod/sync.sh push` removes COMMIT
+  first and then writes it with a hash of `cxr/*.py` (CODE_SHA256), which `runs` and `evaluate
+  --final` recompute on the pod. It also needs all 9 runs finished and every checkpoint checked by
+  `runs` at the same commit. These paths were run on the Mac with the models replaced by stand-ins,
+  on a fake data tree (training, `runs`, the final evaluation, reruns, altered or missing files,
+  edited code); that test found a crash in the new row check under pandas 3, fixed before the run.
+- (points 1 and 5, wording) H3.2's verdict reads "no gain of RE over R as large as the 0.02 margin"
+  instead of "RE is no better than R" (the rule tests non-superiority, not equivalence), and its
+  falsified branch "RE's gain over R is at least the 0.02 margin" instead of "RE is better than R by
+  at least 0.02 (RoentMod's prediction)". The yes/no mass is described as probability on yes or no
+  as the first token, not as how often the model answers yes or no.
+The fresh-set notebook was also checked against the plan's list of metrics, with an independent
+review, and now also reports: the other phrasing's real-film metrics (Brier, switch point and slope,
+NIH-label AUROC, yes/no mass; it had only CTR-AUROC), every metric without the images whose CTR is
+within 0.025 of 0.5 (`h3_metrics_<set>_without_margin.csv`, `h3_arms_<set>_without_margin.csv`; it
+had only real-film CTR-AUROC), each arm's mean with the range of its seeds (`h3_arms_<set>.csv`),
+H3.2's secondary contrasts (Brier, NIH-label AUROC) under the same rule and margin, and the per-seed
+contrasts behind every verdict (`h3_per_seed_<set>.csv`). It displays every table in full, and its
+text says which rule was added during training. The test-split notebook was rerun with this code;
+the numbers it already reported are unchanged, and its secondary Brier verdict is inconclusive
+(`results/h3_per_seed_test.csv`: one seed's difference is above 0.02). Left for after the final run,
+among the audits' other points: the README's wording ("conditional yes/no score crossings" rather
+than "answer flips"), the RadEdit split statement (the audits say its model card describes a
+patient-disjoint NIH split; to be checked against the card), the patient bootstrap of the v1 dose
+and follow-up notebooks, the margin accounting in the `cxr/h3.py` supply summary, and the skip rule
+of `train`.

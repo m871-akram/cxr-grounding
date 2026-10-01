@@ -9,18 +9,22 @@ REMOTE=cxr-pod:/workspace/cxr-grounding
 
 case "${1:-}" in
   push)
-    # rsync must exist on both ends, and apt packages do not survive a new pod.
-    ssh cxr-pod 'command -v rsync >/dev/null || (apt-get update -qq && apt-get install -y -qq rsync >/dev/null)'
+    # rsync must exist on both ends, and apt packages do not survive a new pod. COMMIT and CODE_SHA256
+    # are removed first, so a push that fails halfway leaves code the final steps refuse.
+    ssh cxr-pod 'command -v rsync >/dev/null || (apt-get update -qq && apt-get install -y -qq rsync >/dev/null);
+      rm -f /workspace/cxr-grounding/COMMIT /workspace/cxr-grounding/CODE_SHA256'
     # --delete mirrors deleted code files; excluded folders on the pod are never touched.
     rsync -rlptz --delete \
       --exclude=.git/ --exclude=/data/ --exclude=/outputs/ --exclude=/results/ --exclude=/logs/ \
       --exclude=.venv/ --exclude=__pycache__/ --exclude=.ipynb_checkpoints/ --exclude=.DS_Store \
-      --exclude='CLAUDE*.md' --exclude=/papers/ \
+      --exclude='CLAUDE*.md' --exclude=/papers/ --exclude=/COMMIT --exclude=/CODE_SHA256 \
       ./ "$REMOTE/"
     # The pod has no .git: the commit of the pushed code goes to COMMIT, for run logs and manifests.
     # Untracked code counts as uncommitted; results/ is not pushed, so it does not count.
     dirty=$([ -z "$(git status --porcelain -- . ':(exclude)results')" ] || echo " + uncommitted changes")
     echo "$(git rev-parse HEAD)$dirty" | ssh cxr-pod "cat > /workspace/cxr-grounding/COMMIT"
+    # The hash of the pushed cxr/*.py: the final steps check that the pod's code is still this code.
+    python3 -c 'import cxr; print(cxr.code_hash())' | ssh cxr-pod "cat > /workspace/cxr-grounding/CODE_SHA256"
     ;;
   pull)
     rsync -rltz "$REMOTE/results/" results/
