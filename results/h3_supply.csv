@@ -1,0 +1,5 @@
+arm,set,images,no_ctr,yes,no,dropped_margin
+E,train,4500,7,1191,1879,1421
+E,val,360,0,95,151,113
+R,train,9751,16,1212,6379,2141
+R,val,1376,2,171,919,284

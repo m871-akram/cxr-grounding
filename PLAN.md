@@ -804,3 +804,27 @@ superseded by the amendment. Step 2's condition still holds (2 of 4 edited-film 
 1.5 0.086 -> 0.849); only the detail "1.5 at 0.74 at growth 0" no longer holds (0.086). H3 keeps
 MedGemma 4B. Session: 76 min (16:15-17:31 UTC), about $2.66, including the H3 generation code's
 2-film test (38 images, manifests, a refused rerun with another guidance).
+
+**2026-09-30/10-01, H3 generation, first session (RTX PRO 6000).** `python -m cxr.h3 generate` with
+the code at commit 2fadfeb (clean tree); every manifest records it and the RadEdit revisions
+(`microsoft/radedit` e8ebd31, `stabilityai/sdxl-vae` 6f5909a, `microsoft/BiomedVLP-BioViL-T`
+692f09e). Done: E's validation images (60 val films, 360 images) and the fresh-test edits (100
+films, 700 images, not measured); E: 470 of its 750 source films (2,821 of 4,500 images). RadEdit
+ran at about 5.0 s per image (3,881 images in 5.4 h), against 2.65-2.84 s in the dose and follow-up
+runs on the same GPU type; this pod had 16 vCPUs, the earlier ones 28-36, but the cause is not
+established. The run was stopped by hand at 00:42 UTC, four minutes before the 5.5-hour watchdog;
+the 30 newest images open correctly, so a resumed run (it skips finished images, under the same
+manifests) continues from there. `h3 measure` has not run yet. Session: 5 h 28 min (19:14-00:42 UTC),
+about $11.42 against an estimate of $9.80 (cap $11.50); RunPod billing to 2026-09-30: $21.61.
+
+**2026-10-01, H3 generation completed (RTX PRO 6000, 32 vCPUs).** Resumed under the same manifests
+(code 2fadfeb, clean): RadEdit ran at 2.61 s per image, against 5.0 s on the 16-vCPU pod the night
+before, for the remaining 1,679 E images, then `python -m cxr.h3 measure` (the fresh test set is not
+measured). Supply once the margin is dropped (`results/h3_supply.csv`): E 1,191 "yes" and 1,879 "no"
+among 4,500 images (1,421 dropped by the margin, 7 without a CTR); R 1,212 "yes" and 6,379 "no"
+among 9,751 real films of the training pool, at most 3 per patient (2,141 dropped, 16 without a
+CTR); validation: E 95 and 151 of 360 edits, R 171 and 919 of 1,376 films. Both arms reach 1,000
+per class, so N = 2,000 as pre-registered (expected: E 1,253, lower bound 1,036; R about 1,210).
+The pod removed itself about 2 minutes after the run ended, before the 3-minute pull loop saw the
+end; a 2-vCPU CPU pod fetched the results (2 minutes, under $0.01). Session: about 1 h 22 min
+(06:40-08:02 UTC), about $2.87.
