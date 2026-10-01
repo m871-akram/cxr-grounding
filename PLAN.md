@@ -460,6 +460,10 @@ test set scored or measured):
 - The fresh test set holds 2,335 real PA films (counted, not scored or measured), 600 edits, 100
   shams and 100 blanks; the test split holds 1,883 real films, the 600 dose edits, 580 shams and
   380 blanks.
+- Per-seed condition for "H3.1 supported": both of its deciding contrasts must have a positive
+  sign for seeds 0, 1 and 2, E's edited-film gain as well as D (the notebook first checked D only).
+  When both named ways of falsifying H3.1 hold, both are reported. Decided after a review of
+  `notebooks/05_h3_eval.ipynb` on synthetic scores, before any trained arm's scores were looked at.
 
 **Day 4, the fix.** Output: before / after table.
 Superseded by H3 above (post-hoc change to step 2, 2026-09-30); H3 runs after v1 is public.
@@ -865,3 +869,16 @@ whose log-odds moved by 0.06-0.17, as many as the pre-registered rule allows (3 
 metrics of `h3_base.csv` agree within 5e-5 (its 4 decimals), and CTR > 0.5 agrees with the dose run
 for every image. Prior correction: pi = 0.210 for real films (1,374 val films) and 0.411 for edits
 and shams (360). Session: 14 min 26 s (09:42:49-09:57:15 UTC), about $0.50.
+
+**2026-10-01, review of the H3 evaluation notebook (Mac, synthetic scores).** While the training
+session ran, `notebooks/05_h3_eval.ipynb` was checked against the pre-registration: rule by rule,
+its statistics, a simulated fresh set, and synthetic score tables built to make each verdict branch
+fire (precondition, H3.1 supported, both ways of falsifying it, the robustness checks and per-seed
+signs, H3.2 supported and falsified, the guards). Every branch matched the text except one: "H3.1
+supported" ignored the per-seed sign of E's edited-film gain (a clarification above now requires
+it), and when both ways of falsifying H3.1 held, only the first was reported. Also added, as the
+text already required: the ratio of the two real-film gains, the prior-corrected switch point,
+edited-film Brier and "yes" rate; the effusion AUROC now uses the real films with a segmenter CTR,
+like every other real-film metric (it included the few without one); and an assertion that the two
+phrasings' rows are aligned. The review agents were restarted several times because the Mac went
+to sleep; it was finished by hand.
