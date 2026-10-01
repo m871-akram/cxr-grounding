@@ -1,0 +1,11 @@
+{
+ "model": "E2",
+ "set": "test",
+ "train_draw": "edf442a188264bc374a9c1fd507fadcf6b0af44004605485bc3f685358bf7c94",
+ "val_draw": "6c38aa40db22844f01ad5fb260944b720504f38e5fcf4f46c14c2e3555f78810",
+ "best_step": 300,
+ "revision": "290cda5eeccbee130f987c4ad74a59ae6f196408",
+ "commit": "c3959ab85f9e7ecb035082f403b5f245f1b5b99a",
+ "n_images": 3443,
+ "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition"
+}

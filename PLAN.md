@@ -882,3 +882,24 @@ edited-film Brier and "yes" rate; the effusion AUROC now uses the real films wit
 like every other real-film metric (it included the few without one); and an assertion that the two
 phrasings' rows are aligned. The review agents were restarted several times because the Mac went
 to sleep; it was finished by hand.
+
+**2026-10-01, H3 training session (RTX PRO 6000, 32 vCPUs).** No A100 could be created in EUR-IS-1
+(two attempts), so the RTX PRO 6000 ran it, with the code at commit c3959ab (clean). The 9 runs (R, E
+and RE, seeds 0-2) took 2 h 15 min at about 1.34 s per step on real data, and every run stopped early
+(the per-run record goes to `results/h3_runs.csv` and `h3_curves.csv` with `python -m cxr.lora runs`
+in the next session). Then the 12 adapters (9 best, 3 E best on real validation films) were scored on
+the test split in 1 h 51 min, about 9 min each, slower than the 7-8.5 min estimated. Session: 4 h 10
+min (10:09-14:19 UTC), about $8.70; the pod removed itself 2 minutes after the end, once the results
+were pulled.
+Exploratory test-split results (`notebooks/05_h3_eval.ipynb`, `results/h3_metrics_test.csv`,
+`h3_contrasts_test.csv`, `h3_verdicts_test.csv`; H3's verdicts come only from the fresh set, not
+scored yet). Real-film CTR-AUROC: base 0.862, R 0.921, E 0.909, RE 0.925 (means of 3 seeds). Gains
+over the base: R +0.059 (95% CI 0.038 to 0.081), E +0.047 (0.023 to 0.074), RE +0.063 (0.037 to
+0.090), against a bar of 0.028; E's edited-film Brier gain +0.236 (0.196 to 0.274), bar 0.064. D =
+-0.035 (-0.070 to -0.004), negative for every seed and in the three robustness checks (-0.062,
+-0.026, -0.025): on this split, E's real-film gain is 0.79 of R's, so the notebook reads "H3.1
+falsified: E transfers". RE - R: +0.004 (-0.003 to +0.012), so "H3.2 supported". No guard fires:
+blanks get no "yes", and effusion AUROC rises slightly in every arm. Training on real films also
+moves the edited films: R's edited-film Brier is 0.153 (base 0.319, E 0.083), and the share of edits
+with CTR <= 0.5 answered "yes" falls from 55% to 31% (E 11%). E answers less often with yes or no on
+real films (median yes/no mass 0.888, 0.714 at its best real-validation checkpoint; base 0.985).

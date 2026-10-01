@@ -3,6 +3,7 @@ both (RE), and the evaluation of every model through one path.
 
     python -m cxr.lora overfit                         # 32 examples, 50 steps: the checks of the wiring
     python -m cxr.lora train --arm R --seed 0          # one arm (R, E, RE) and seed (SEEDS)
+    python -m cxr.lora runs                            # the 9 runs' record (run.json, log.csv) -> results/
     python -m cxr.lora evaluate --model base --set test   # the base model on the audit's test split
     python -m cxr.lora evaluate --model R0 --set fresh --final   # the fresh test set: final run only
 
@@ -258,6 +259,18 @@ def train(args: argparse.Namespace) -> None:
     run_training(name, data, val, args.seed, MAX_STEPS, LR, real_val=real_val if args.arm == "E" else None)
 
 
+def runs(args: argparse.Namespace) -> None:
+    """The training record, small enough for git: one row per run (its run.json) -> results/h3_runs.csv,
+    and every validation row of every run (its log.csv) -> results/h3_curves.csv."""
+    names = [f"{a}{s}" for a in ARMS for s in SEEDS]
+    rows = [json.loads((RUNS / n / "run.json").read_text()) for n in names]
+    curves = pd.concat([pd.read_csv(RUNS / n / "log.csv").assign(run=n) for n in names], ignore_index=True)
+    pd.DataFrame(rows).to_csv(RESULTS / "h3_runs.csv", index=False)
+    curves.to_csv(RESULTS / "h3_curves.csv", index=False)
+    for r in rows:
+        print(f"  {r['name']}: {r['steps_run']} steps, best at {r['best_step']}, {r['seconds'] / 60:.1f} min", flush=True)
+
+
 def overfit(args: argparse.Namespace) -> None:
     """32 examples of R (16 per class), args.steps steps at a constant learning rate. Passes if: (1)
     before training, the AUROC on the 32 films is above 0.5 (the labels are not inverted, and the
@@ -406,6 +419,7 @@ def main() -> None:
     t.add_argument("--arm", choices=ARMS, required=True)
     t.add_argument("--seed", type=int, choices=SEEDS, required=True)
     t.set_defaults(func=train)
+    sub.add_parser("runs", help="The training record of the 9 runs -> results/").set_defaults(func=runs)
     e = sub.add_parser("evaluate", help="Score a model on an evaluation set (fresh: final run only)")
     e.add_argument("--model", required=True, help="base, or <arm><seed> (e.g. R0), or E<seed>real")
     e.add_argument("--set", choices=["test", "fresh"], required=True)
