@@ -1,0 +1,6 @@
+folder,png_files,failed,sizes_and_modes
+outputs/h3/train,4500,0,"{""512x512 L"": 4500}"
+outputs/h3/val,360,0,"{""512x512 L"": 360}"
+outputs/h3/fresh,700,0,"{""512x512 L"": 700}"
+outputs/pairs/test,1960,0,"{""512x512 L"": 1960}"
+outputs/dose,1600,0,"{""512x512 L"": 1600}"

@@ -155,15 +155,30 @@ def measure(args: argparse.Namespace) -> None:
     real["ctr"] = segment_ctr([DATA / "nih512" / f for f in real["file"]])
     edits.drop(columns="path").to_csv(root / "ctr_edits.csv", index=False)
     real.to_csv(root / "ctr_real.csv", index=False)
+    supply(args)
+
+
+def supply_table(edits: pd.DataFrame, real: pd.DataFrame) -> pd.DataFrame:
+    """Examples of each class once the margin is dropped: "yes" is CTR > 0.525 and "no" CTR < 0.475, as
+    in training; every other image with a CTR is dropped (the CTRs exactly at 0.475 or 0.525 too), so
+    each image is counted once."""
     rows = []
     for arm, table in [("E", edits), ("R", real)]:
         for which, g in table.groupby("set"):
-            rows.append({"arm": arm, "set": which, "images": len(g), "no_ctr": int(g["ctr"].isna().sum()),
-                         "yes": int((g["ctr"] > 0.5 + MARGIN).sum()), "no": int((g["ctr"] < 0.5 - MARGIN).sum()),
-                         "dropped_margin": int(((g["ctr"] - 0.5).abs() <= MARGIN).sum())})
-    supply = pd.DataFrame(rows)
-    supply.to_csv(RESULTS / ("h3_supply_test.csv" if args.test else "h3_supply.csv"), index=False)
-    print(supply.to_string(index=False))
+            yes, no = g["ctr"] > 0.5 + MARGIN, g["ctr"] < 0.5 - MARGIN
+            row = {"arm": arm, "set": which, "images": len(g), "no_ctr": int(g["ctr"].isna().sum()), "yes": int(yes.sum()),
+                   "no": int(no.sum()), "dropped_margin": int((g["ctr"].notna() & ~yes & ~no).sum())}
+            assert row["no_ctr"] + row["yes"] + row["no"] + row["dropped_margin"] == row["images"], row
+            rows.append(row)
+    return pd.DataFrame(rows)
+
+
+def supply(args: argparse.Namespace) -> None:
+    """The supply table from the saved CTR tables -> results/h3_supply.csv (h3_supply_test.csv with --test)."""
+    root = OUTPUTS / ("h3_test" if args.test else "h3")
+    table = supply_table(pd.read_csv(root / "ctr_edits.csv"), pd.read_csv(root / "ctr_real.csv"))
+    table.to_csv(RESULTS / ("h3_supply_test.csv" if args.test else "h3_supply.csv"), index=False)
+    print(table.to_string(index=False))
 
 
 def main() -> None:
@@ -180,6 +195,9 @@ def main() -> None:
     m.add_argument("--test", action="store_true", help="The test images and 50 real films per set")
     m.add_argument("--seed", type=int, default=0)
     m.set_defaults(func=measure)
+    s = sub.add_parser("supply", help="The supply table from the saved CTR tables (no segmentation)")
+    s.add_argument("--test", action="store_true", help="The test images")
+    s.set_defaults(func=supply)
     args = parser.parse_args()
     args.func(args)
 

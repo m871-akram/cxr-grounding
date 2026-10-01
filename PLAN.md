@@ -1037,3 +1037,51 @@ had read "H3.1 falsified: E transfers" (ratio 0.79); on the fresh set the ratio 
 interval includes 0. Against the NIH labels, real-film AUROC barely moves (base 0.931; R 0.935, E
 0.931, RE 0.933). On real films, E puts less probability on yes or no as the first token (median
 0.888 vs 0.985 for the base; 0.714 at its best real-validation checkpoint).
+
+**2026-10-01, before the repo goes public: checks and corrections from a second code review.** The
+review (no files changed by it) reproduced the fresh-set H3 results and found no leakage; its claims
+were checked one by one before acting.
+- Saved images (`python -m cxr.provenance images` on a CPU pod with the volume;
+  `results/provenance_images.csv`): every PNG of `outputs/h3` (train, val, fresh), `outputs/pairs/test`
+  and `outputs/dose` was decoded in full, 9,120 files: none failed, all 512 x 512, 8-bit grayscale. The
+  H3 generation, resumed across two sessions and saving straight to the final paths, left no
+  truncated image behind.
+- Code of the H3 images (`results/provenance_manifests.csv`): the 19 H3 folders record one code
+  commit, 2fadfeb, so no generation code changed between the two sessions.
+- Environment (`results/provenance_pip_freeze.txt`, `results/provenance_models.csv`): pip freeze of
+  the pod's venv, the Hugging Face snapshot of each model (MedGemma 4B 290cda5, MedGemma 1.5 9185054,
+  RadEdit e8ebd31, BioViL-T 692f09e, SDXL-VAE 6f5909a) and the SHA-256 of the three TorchXRayVision
+  weight files. Those weights live on the pod's disk, not the volume, so they were downloaded again
+  and hashed (torchxrayvision 1.5.5).
+- Weakness of the pre-registered flip rule: for MedGemma 4B, the Youden thresholds on validation
+  films are near 0 in three of its four question settings (P(yes) 0.00001 to 0.00014,
+  `results/audit_4b_thresholds.csv`), and 99.5-100% of its blank images cross them in those settings
+  (`results/audit_controls.csv`). There the primary rule cannot separate an edit from noise; the
+  secondary rule at 0.5 is the meaningful one, and the README reports it, with the threshold of
+  every rate and control stated.
+- Wording: an "answer flip" is a yes/no score crossing. The README now says "answer" only for
+  MedGemma 4B (its score agrees with its written answer in 98.9-100% of the decoded answers that
+  contain a yes or no) and
+  "score" for MedGemma 1.5 and for the fine-tuned models.
+- Patient-level bootstrap: `notebooks/03b_dose.ipynb` (real and edited films at the same CTR, from
+  overlapping patients) and `notebooks/03c_followup.ipynb` (effusion edits and blur of the same 100
+  films) now resample patients jointly, a patient bringing all its rows of both groups; they used to
+  resample each group on its own. The point estimates do not change; the CI bounds move by at most
+  0.013 (`results/dose_matched_ctr.csv`) and 0.036 (`results/followup_effusion_matched.csv`). Every
+  number cited in the README and above stays the same: 15 of 16 matched-CTR differences with a CI
+  above 0 (the exception's lower bound -0.003 -> -0.002), all 8 edit-minus-blur differences above 0
+  (lowest lower bound 0.306 -> 0.307), and the ranges of the differences. No conclusion changes.
+- H3 supply: the supply table did not count the 6 images with a CTR exactly at 0.475 or 0.525 in any
+  column. `python -m cxr.h3 supply` now counts them as dropped by the margin and checks that the
+  columns add up (`results/h3_supply.csv`): E training 1,421 -> 1,423 dropped, E validation 113 ->
+  114, R training 2,141 -> 2,144; the "yes" and "no" counts, and so the training draws, are unchanged.
+  The entry of 2026-10-01 on the completed generation keeps its old numbers.
+- RadEdit: its model card describes a random, patient-disjoint train/validation split of NIH-CXR and
+  no test split, so the limitation is that we do not know whether our patients were in its training
+  set (README corrected; the earlier wording said it had no held-out split).
+- Code hygiene, documented rather than changed: `dose.py`, `h3.py`, `edit.py`, `audit.py` and
+  `lora.py train` decide that work is finished from the existence of output files (12 places,
+  several inside per-image generation loops). Changing them before publication, without a GPU to
+  test the new paths, risked more than it fixed, so the limitation is stated in the README. The
+  published results were produced, and checked by hash, before this note: the final H3 run by its
+  identity checks, the downloaded files against the pod's SHA-256, and every saved image by decoding.

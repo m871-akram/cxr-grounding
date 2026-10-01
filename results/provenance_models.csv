@@ -1,0 +1,9 @@
+source,model,ref_main,snapshots,file,sha256
+huggingface,google/medgemma-1.5-4b-it,91850547d9f0b2fdd21aa7c5f4f3d1a8a52c243b,91850547d9f0b2fdd21aa7c5f4f3d1a8a52c243b,,
+huggingface,google/medgemma-4b-it,290cda5eeccbee130f987c4ad74a59ae6f196408,290cda5eeccbee130f987c4ad74a59ae6f196408,,
+huggingface,microsoft/BiomedVLP-BioViL-T,692f09e9be1bfe5fdd5f3efdd0e1eca7d2c10b23,692f09e9be1bfe5fdd5f3efdd0e1eca7d2c10b23,,
+huggingface,microsoft/radedit,e8ebd31396ff8553c34084b98b5defb8ebea2817,e8ebd31396ff8553c34084b98b5defb8ebea2817,,
+huggingface,stabilityai/sdxl-vae,6f5909a7e596173e25d4e97b07fd19cdf9611c76,6f5909a7e596173e25d4e97b07fd19cdf9611c76,,
+torchxrayvision 1.5.5,models_data,,,models_data/chex-densenet121-d121-tw-lr001-rot45-tr15-sc15-seed0-best.pt,1a914ae802170187a4852e594708206c12468eeeefd66aa4e8e26141649d61a4
+torchxrayvision 1.5.5,models_data,,,models_data/pc-densenet121-d121-tw-lr001-rot45-tr15-sc15-seed0-best.pt,a9148ef62ae4e7a31a9bed8cef22811f39681cd61e4390398936efc6280af521
+torchxrayvision 1.5.5,models_data,,,models_data/pspnet_chestxray_best_model_4.pth,019b167eac6b729fc1bb92bbbc185fc1730aaa65819f4e3fe718186cadc044fc
