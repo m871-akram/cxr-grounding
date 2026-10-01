@@ -1,0 +1,16 @@
+{
+ "model": "RE1",
+ "set": "fresh",
+ "commit": "8a2b1104294d55a6fef7ce5d80cfe4bae3a53de8",
+ "settings_sha256": "08c07787349b91d2135b0537546d80ee1fa943e53d5026925ffe54417ca81995",
+ "checkpoint": "best",
+ "step": 400,
+ "selection_draw": "fcb2127221874d917bf6b2b03261b28cf21864773cbbb80442fab91acac7795d",
+ "train_draw": "b04be7157aabae8329abfecac71b2d83277266432597c611c09e0237df21a5d1",
+ "adapter_sha256": "da9b9118655224e0548288e01eeed43c124b6606c986a16d959a55496ee7c670",
+ "input_sha256": "293fa7e4cb2ff52f087a8f662333532be03f96f28bc66e02627de9973883f301",
+ "scores_sha256": "570ff4a5b1b1d2873104ff5521c6594c699adaa7881a824b0561a9de7d9b5465",
+ "revision": "290cda5eeccbee130f987c4ad74a59ae6f196408",
+ "n_images": 3135,
+ "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition"
+}

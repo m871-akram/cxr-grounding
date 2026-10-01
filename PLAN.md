@@ -977,3 +977,33 @@ than "answer flips"), the RadEdit split statement (the audits say its model card
 patient-disjoint NIH split; to be checked against the card), the patient bootstrap of the v1 dose
 and follow-up notebooks, the margin accounting in the `cxr/h3.py` supply summary, and the skip rule
 of `train`.
+
+**2026-10-01, H3 final run on the fresh test set (RTX PRO 6000).** Commit 8a2b110, pushed with its
+code hash. `python -m cxr.lora runs` reloaded the 12 checkpoints: each reproduced exactly the
+validation loss logged at its step (`results/h3_runs.csv`; RE2's best checkpoint is 0.000395 from
+its nearest other saved one) and the runs' validation rows were written (`results/h3_curves.csv`).
+The base model (with the measures of the fresh set) and the 12 adapters were then scored with
+`--final`. At about 11 minutes per model, against the 9 estimated from the test split, the 2.4-hour
+watchdog removed the pod at 19:08 UTC while E2real, the 13th model, was being scored; the log had no
+end line, and the pull loop, which waited for one, stayed silent. The 12 finished tables were fetched
+with a CPU pod and checked (one commit, one settings hash, one input hash; adapters and steps
+matching `h3_runs.csv`; table hashes matching their .json) before any score was looked at, and
+E2real was then scored alone with the same commit and checks. Sessions: 16:43-19:09 UTC (2 h 26
+min, about $5.07), the fetch pod (2 min, under $0.01), E2real 19:47-19:58 UTC (11 min, about $0.38).
+Results (`notebooks/05_h3_eval_fresh.ipynb`; `results/h3_metrics_fresh.csv`, `h3_arms_fresh.csv`,
+`h3_contrasts_fresh.csv`, `h3_per_seed_fresh.csv`, `h3_verdicts_fresh.csv`). Real-film CTR-AUROC:
+base 0.900; R 0.937 (seeds 0.934-0.940), E 0.925 (0.920-0.927), RE 0.937 (0.936-0.937). The
+precondition holds: R's gain is +0.037 (95% CI 0.025 to 0.050), above the bar of 0.020. E learned
+the edits: its edited-film Brier gain is +0.229 (0.191 to 0.268; bar 0.061), positive for every
+seed. E's real-film gain is +0.025 (0.015 to 0.035), 0.67 of R's, so D = -0.013 (-0.027 to +0.002):
+H3.1 is inconclusive. The data show neither that E's real-film gain is less than half of R's
+(supported) nor that it is more than half (falsified, "E transfers"); D's point estimate is negative
+in the three robustness checks (-0.049 with the CheXmask label, -0.005 within NIH finding status,
+-0.012 with E's best real-validation checkpoint). H3.2 is supported: RE's gain over R is -0.0005
+(-0.005 to +0.004), no gain as large as the 0.02 margin; the same against the NIH labels, and
+inconclusive on Brier (one seed's difference is above 0.02). No guard fires: no blank image gets
+"yes", and effusion AUROC rises for R and RE and is unchanged for E. On the test split the notebook
+had read "H3.1 falsified: E transfers" (ratio 0.79); on the fresh set the ratio is 0.67 and D's
+interval includes 0. Against the NIH labels, real-film AUROC barely moves (base 0.931; R 0.935, E
+0.931, RE 0.933). On real films, E puts less probability on yes or no as the first token (median
+0.888 vs 0.985 for the base; 0.714 at its best real-validation checkpoint).
