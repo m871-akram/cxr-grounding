@@ -548,6 +548,36 @@ What they do, on public images only:
 - **Failure-case review.** ~20 pairs where MedGemma ignored the edit: unclear edit, borderline
   case, or real model error?
 
+*Pilot reader study, recorded on 2026-10-01 before any reader sees an image.*
+- Images: 100 from the test split, drawn by `python -m cxr.reader select` (seed 20261001), one per
+  patient, so no original appears with its own edit. 50 edited: 15 cardiomegaly additions that
+  passed the three checks (audit, 0.30 mask), 10 edits at growth 0 and 10 at growth 0.06 (dose run),
+  15 effusion additions that passed the checks (audit). 50 real: 15 with the NIH label cardiomegaly
+  (not effusion), 15 effusion (not cardiomegaly), 20 "No Finding". The key (`outputs/reader/key.csv`,
+  SHA-256 f208c82451b05000ed4d48f4972e46c8251ad5cc45e825cec9a27d0f8010a932) stays out of git until
+  every reader has answered, then goes to `results/` with the answers.
+- Page (`python -m cxr.reader page`): one self-contained HTML file; every image re-encoded the same
+  way (8-bit grayscale PNG, no metadata) and shown by a random id; a new random order for each
+  reader; three questions per image (real or edited? cardiomegaly? pleural effusion?), with no going
+  back to an earlier image; answers kept in the browser and exported as a CSV. The page holds no file
+  name, group or label. Each reader rates all 100 images once, with no time limit and no feedback.
+- Analysis, descriptive (no verdicts):
+  1. Realism: per reader, the share of images correctly called real or edited, against 50% (exact
+     two-sided binomial test, n = 100); per group, the share of edits called real and of real films
+     called edited. Pooled over readers, with a 95% CI from 1,000 bootstrap resamples of images.
+  2. Agreement with the intended finding: for edits, the share of "yes" to the finding the edit was
+     meant to add (cardiomegaly for the cardiomegaly edits, growth 0 and 0.06 included; effusion for
+     the effusion edits); for real films, agreement with the NIH label ("no" to both for "No
+     Finding"); per reader, pooled, and per group.
+  3. Inter-reader agreement: Fleiss' kappa for each of the three questions, 95% CI from bootstrap
+     resamples of images.
+  4. Readers against MedGemma 4B on the same images: MedGemma's answer is P(yes) > 0.5 in the
+     re-scored tables, for "Is there cardiomegaly in this image?" on the real films and the
+     cardiomegaly edits, and "Is there pleural effusion in this image?" on the real films and the
+     effusion edits (where it was scored). Per group, the share of "yes" from MedGemma, from each
+     reader and from the readers' majority, and Cohen's kappa between MedGemma and the majority. The
+     comparison that matters most: the growth-0 and growth-0.06 edits, where MedGemma often said yes.
+
 Rules:
 - No patient data from their practice, and no use of the models on patients (RadEdit is
   research-only; MedGemma's outputs are not meant to inform diagnosis or patient management).
