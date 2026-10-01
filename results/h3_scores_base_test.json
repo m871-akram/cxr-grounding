@@ -1,0 +1,8 @@
+{
+ "model": "base",
+ "set": "test",
+ "revision": "290cda5eeccbee130f987c4ad74a59ae6f196408",
+ "commit": "68e6d534b3c4341a14de73baf444b5bf3cece813",
+ "n_images": 3443,
+ "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition"
+}

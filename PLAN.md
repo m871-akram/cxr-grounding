@@ -442,6 +442,25 @@ PRO 6000, priced here at $2.09/h as the upper bound; about 20 MedGemma scores pe
   about 2.5 h, $5.20.
 - Total at most about 13 GPU-hours, about $27, within the $70 budget.
 
+*Clarifications, 2026-10-01, before any training run* (no H3 model trained; nothing of the fresh
+test set scored or measured):
+- Prior correction: d + logit(pi) applies to the trained arms only, which were trained 50/50; the
+  base model is scored as it is. pi is the val split's share of CTR > 0.5 among the films of the
+  validation draw (at most 3 per patient, every film with a segmenter CTR, margin not applied) for
+  real films, and among the val edits and shams for edited images (`results/h3_val_prior.csv`,
+  written by the base model's test-split evaluation). Blank images use the real-film pi.
+- Margin: 6 images have a CTR exactly at the margin (3 real films of the training pool at 0.525,
+  3 edits at 0.475, one of them an E validation image). "Yes" means CTR > 0.525 and "no" CTR <
+  0.475, so they are in neither class, as in `results/h3_supply.csv`.
+- MedGemma 4B is pinned to revision 290cda5eeccbee130f987c4ad74a59ae6f196408: the only snapshot in
+  the volume's Hugging Face cache since its download on 2026-09-29, so every earlier MedGemma 4B
+  score used it too.
+- A batch of 16 is one forward and backward pass on the RTX PRO 6000 (peak memory 49.0 GB in the
+  overfit test, `results/h3_overfit.csv`); a 48-GB card would take two passes of 8, same loss.
+- The fresh test set holds 2,335 real PA films (counted, not scored or measured), 600 edits, 100
+  shams and 100 blanks; the test split holds 1,883 real films, the 600 dose edits, 580 shams and
+  380 blanks.
+
 **Day 4, the fix.** Output: before / after table.
 Superseded by H3 above (post-hoc change to step 2, 2026-09-30); H3 runs after v1 is public.
 - [ ] ~~`cxr/lora.py`: LoRA on training pairs (patient split), bf16, checkpoints; VQA-RAD training
@@ -828,3 +847,21 @@ per class, so N = 2,000 as pre-registered (expected: E 1,253, lower bound 1,036;
 The pod removed itself about 2 minutes after the run ended, before the 3-minute pull loop saw the
 end; a 2-vCPU CPU pod fetched the results (2 minutes, under $0.01). Session: about 1 h 22 min
 (06:40-08:02 UTC), about $2.87.
+
+**2026-10-01, H3 test session (RTX PRO 6000, 36 vCPUs).** Code at commit 68e6d53 (clean); the
+RTX PRO 6000 was the cheapest GPU with at least 48 GB listed in EUR-IS-1 at launch. `python -m
+cxr.lora overfit` (`results/h3_overfit.csv`): 476 trainable tensors, 29,802,496 parameters, all in
+the language model; on 32 R films (16 per class), 50 steps at a constant learning rate of 1e-4, the
+eval-mode loss goes from 1.168 to 0.0000 and the AUROC from 0.922 to 1.000, and the adapter reloaded
+on a fresh base gives the same log-odds (largest difference 0.00000): all three checks pass. 1.20 s
+per step at batch 16 in one pass (median, first step excluded), peak memory 49.0 GB. `python -m
+cxr.lora evaluate --model base --set test` (`results/h3_scores_base_test.csv`,
+`h3_measures_test.csv`, `h3_val_prior.csv`): 3,443 images (1,883 real films, 600 dose edits, 580
+shams, 380 blanks) at about 24 scores per second (stage times in the log). The evaluation path
+reproduces the re-scored base (`notebooks/05_h3_eval.ipynb`, run with the arms replaced by the base,
+so its verdicts only test the code, and a dry run writes no table to `results/`): log-odds identical
+to the dose run's for 2,477 of 2,480 images; the other 3 are real films with P(yes) below 0.0004
+whose log-odds moved by 0.06-0.17, as many as the pre-registered rule allows (3 real films); the 7
+metrics of `h3_base.csv` agree within 5e-5 (its 4 decimals), and CTR > 0.5 agrees with the dose run
+for every image. Prior correction: pi = 0.210 for real films (1,374 val films) and 0.411 for edits
+and shams (360). Session: 14 min 26 s (09:42:49-09:57:15 UTC), about $0.50.

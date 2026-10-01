@@ -128,14 +128,21 @@ bash pod/sync.sh pull                                    # Mac: results/ <- pod,
 
 Every stage skips finished work, so an interrupted run is simply started again.
 
-## Data and models
+## License, data and models
 
-- **NIH ChestX-ray14** (Wang et al., CVPR 2017), from a Hugging Face mirror of the NIH release
-  (`alkzar90/NIH-Chest-X-ray-dataset`); PA films only.
-- **CheXmask** v1.0 (Gaggion et al., Scientific Data 2024; PhysioNet, CC BY 4.0): heart and lung
-  contours; the downloaded file is checked against PhysioNet's SHA-256.
-- **RadEdit** (`microsoft/radedit`): research use only; weights are not redistributed.
+The code is under the MIT License ([LICENSE](LICENSE)). No dataset or model weights are included;
+each keeps its own terms:
+
+- **NIH ChestX-ray14**, PA films only, from a Hugging Face mirror of the NIH release
+  (`alkzar90/NIH-Chest-X-ray-dataset`). Wang X, Peng Y, Lu L, Lu Z, Bagheri M, Summers RM.
+  ChestX-ray8: Hospital-scale chest X-ray database and benchmarks on weakly-supervised
+  classification and localization of common thorax diseases. CVPR 2017.
+- **CheXmask** v1.0 (PhysioNet, CC BY 4.0): heart and lung contours; the downloaded file is checked
+  against PhysioNet's SHA-256. Gaggion N, Mosquera C, Mansilla L, et al. CheXmask: a large-scale
+  dataset of anatomical segmentation masks for multi-center chest x-ray images. Scientific Data 11,
+  511 (2024).
+- **RadEdit** (`microsoft/radedit`): research use only; weights not included or redistributed.
 - **MedGemma** (`google/medgemma-4b-it`, `google/medgemma-1.5-4b-it`): Health AI Developer
-  Foundations terms.
+  Foundations terms; weights not included.
 - **TorchXRayVision**: PadChest- and CheXpert-trained classifiers and the ChestX-Det segmenter, as
   independent checks of the edits.

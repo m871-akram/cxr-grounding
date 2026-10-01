@@ -33,7 +33,7 @@ from .data import auroc, patient_hash
 from .h3 import FRESH_BELOW, MARGIN, cached_revision, commit, segment_ctr
 
 MODEL_ID = "google/medgemma-4b-it"
-MEDGEMMA_REVISION = None  # set to the pod's cached commit (printed by the test session) before training
+MEDGEMMA_REVISION = "290cda5eeccbee130f987c4ad74a59ae6f196408"  # the only cached commit, used since day 1
 QUESTION = QUESTIONS["cardiomegaly"][0]  # the trained question
 LORA_TARGETS = r".*language_model.*\.(q_proj|k_proj|v_proj|o_proj|gate_proj|up_proj|down_proj)"
 ARMS, SEEDS = ["R", "E", "RE"], [0, 1, 2]
