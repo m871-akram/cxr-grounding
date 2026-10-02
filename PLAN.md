@@ -1085,3 +1085,19 @@ were checked one by one before acting.
   test the new paths, risked more than it fixed, so the limitation is stated in the README. The
   published results were produced, and checked by hash, before this note: the final H3 run by its
   identity checks, the downloaded files against the pod's SHA-256, and every saved image by decoding.
+
+**2026-10-01/02, RadEdit bug report prepared; the network volume deleted.** The two quirks of
+RadEdit's released pipeline (lab notebook, 2026-09-29) were traced in `pipeline.py` at e8ebd31, still
+the repository's `main` (last modified 2025-12-08): in `inversion_reverse_process_two_masks` the keep
+region is pasted back from the inverted latent one timestep noisier (`timestep_to_latents[:, idx +
+1]`, a workaround for a NaN at index 0 that the inversion's last, zero-variance step creates), and a
+second `if keep_mask is not None:` block pastes the inverted latent back everywhere outside the edit
+mask, overriding the keep mask; Algorithm 3 of the paper (p.7) does neither. None of the repository's
+11 closed discussions reports them. A standalone reproduction script and a three-hunk patch were run
+before and after on one public NIH film (00000001_000.png) on an 8-vCPU CPU pod; both bugs show
+before and disappear after (script, patch, outputs and a pull-request draft kept outside git, in
+`outputs/radedit_pr/`, for Akram to post from his own account). Session: 32 min (21:46-22:19 UTC),
+about $0.13, of which about 20 minutes idle after the runs ended at 21:59 because the Mac slept
+once its keep-awake timer expired. Then every downloaded file was checked again against the pod's
+SHA-256 (4,406 files and 22 logs) and the network volume was deleted on Akram's instruction; no pod
+or volume remains.

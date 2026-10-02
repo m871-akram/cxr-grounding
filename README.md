@@ -6,12 +6,18 @@ that pass automatic checks, and asks MedGemma the same yes/no question before an
 
 > Research project on public data. Not for clinical use.
 
-**MedGemma's yes/no scores depend on the X-ray: of the edits that passed our automatic checks and
-started below 0.5, 98.6-100% cross above it. For MedGemma 4B these are answer flips (its score agrees
-with its written answer in 98.9-100% of the decoded answers that contain a yes or no); for MedGemma
-1.5 they are score crossings. But the scores also react to how the editor paints a finding, not only
-to the anatomy the edit was meant to change, so crossings on generated counterfactuals show that a
-model uses the image, not that it reads the anatomy.**
+**Key results**
+- Edits that pass our automatic checks flip MedGemma 4B's answer in 98.6-100% of cases (threshold 0.5).
+- But MedGemma also reacts to how the editor paints a finding: an edit that makes the heart denser
+  but not wider raises 4B's cardiomegaly calls from 14% to 39% (threshold 0.5; sham with the same
+  mask: 12%).
+- Fine-tuning (LoRA, pre-registered, fresh patients): training only on edits recovers about
+  two-thirds of the real-data gain in ranking films by heart size (CTR-AUROC 0.900 -> 0.925, vs 0.937
+  with real films); adding edits to real films adds nothing.
+
+**The scores react to how the editor paints a finding, not only to the anatomy the edit was meant to
+change, so crossings on generated counterfactuals show that a model uses the image, not that it
+reads the anatomy.**
 
 An edit *passes our automatic checks* when an independent classifier (TorchXRayVision; the
 PadChest-trained model, and for effusion also the CheXpert-trained one) scores it above its threshold
@@ -208,5 +214,8 @@ each keeps its own terms:
 - **RadEdit** (`microsoft/radedit`): research use only; weights not included or redistributed.
 - **MedGemma** (`google/medgemma-4b-it`, `google/medgemma-1.5-4b-it`): Health AI Developer
   Foundations terms; weights not included.
-- **TorchXRayVision**: PadChest- and CheXpert-trained classifiers and the ChestX-Det segmenter, as
-  independent checks of the edits.
+- **TorchXRayVision**: PadChest- and CheXpert-trained classifiers, and the PSPNet segmenter released
+  with ChestX-Det, as independent checks of the edits. Its paper says the segmenter was trained on
+  1,000 chest images from unnamed external data, not on ChestX-Det's NIH images; since the source is
+  not named, an overlap with NIH ChestX-ray14 can be neither ruled out nor confirmed. Its CTR agrees
+  with CheXmask's on our real films (r = 0.893, `results/segmenter_ctr.csv`).
