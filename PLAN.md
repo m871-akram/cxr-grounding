@@ -1101,3 +1101,19 @@ about $0.13, of which about 20 minutes idle after the runs ended at 21:59 becaus
 once its keep-awake timer expired. Then every downloaded file was checked again against the pod's
 SHA-256 (4,406 files and 22 logs) and the network volume was deleted on Akram's instruction; no pod
 or volume remains.
+
+**2026-10-02, RadEdit reproduction rerun for the pull request.** Akram opens one pull request with the
+combined fix (`pipeline.py` with both changes), so the reproduction script is now in the repository
+(`radedit/reproduce_radedit_bugs.py`) with a third check: without a keep mask, the current and the
+fixed pipeline must give identical images. The volume being gone, a new 8-vCPU CPU pod installed the
+versions of `results/provenance_pip_freeze.txt` (diffusers 0.40.0, transformers 5.17.0, accelerate
+1.15.0, torch 2.8.0), downloaded RadEdit after Akram logged in to Hugging Face, and took the original
+1024-px NIH film 00000001_000.png from the zip that holds it. This network blocked outbound high
+ports, so the pod was driven through RunPod's SSH proxy (no rsync; files sent base64-encoded).
+Results (`results/radedit_repro.txt`): the two bugs reproduce on the original film (the kept region
+differs from the film's VAE round trip by 38.0, 16.6 and 8.0 gray levels at 4, 8 and 16 steps; an
+empty keep mask gives exactly the image of keep = 1 - edit) and disappear with the fix (0.81, 0.36,
+0.11; an empty keep mask then equals no keep mask). Without a keep mask the two pipelines give
+identical images (largest difference 0). Session: 44 min (12:20-13:05 UTC), about $0.18, including
+about 15 minutes idle after the runs ended at 12:42 (the end check did not parse the proxy's output)
+and the wait for the Hugging Face login.

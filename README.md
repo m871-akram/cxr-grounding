@@ -87,8 +87,9 @@ shuffled image crosses, for either model (980 of each; largest P(yes) on a blank
   same side of 0.5; for 1.5 the log-odds fell by 1.1-1.5 on average and 3.5-10.5% of scores changed
   side (`results/bos_check.csv`). Every number here comes from the re-scored run.
 - **RadEdit's released pipeline** ignores the keep mask and, outside the edit mask, pastes back a
-  latent one timestep too noisy (`results/radedit_bugcheck.csv`). We paste the original pixels back
-  after decoding, which removes both effects outside the mask but not inside it. RadEdit was trained
+  latent one timestep too noisy (`results/radedit_bugcheck.csv`; a standalone reproduction and the
+  proposed fix: `radedit/reproduce_radedit_bugs.py`, `results/radedit_repro.txt`). We paste the
+  original pixels back after decoding, which removes both effects outside the mask but not inside it. RadEdit was trained
   on NIH ChestX-ray14 with its own random, patient-disjoint train/validation split and no test split
   (its model card), so we do not know whether our patients were in its training set.
 - **The test split is exploratory**: the edit settings and the analyses above were chosen after
@@ -161,6 +162,7 @@ cxr/                all the Python, one file per stage, run as: python -m cxr.<s
   provenance.py     records kept before deleting the pod volume: images decoded, H3 manifests, environment
 notebooks/          analysis on the Mac, reading only results/ (01 data, 03 audit, 03b dose, 03c follow-up,
                     04 H3 orientation, 05 H3 evaluation: test split, fresh set)
+radedit/            standalone reproduction of two bugs in RadEdit's released pipeline (fix proposed upstream)
 pod/                the GPU pod (RunPod): sync, setup, run in tmux, watchdog, provenance
 results/            small tables and figures (in git)
 PLAN.md             plan, pre-registrations and lab notebook

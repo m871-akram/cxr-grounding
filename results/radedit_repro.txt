@@ -1,0 +1,23 @@
+# radedit/reproduce_radedit_bugs.py, run on 2026-10-02 on an 8-vCPU CPU pod (no GPU).
+# microsoft/radedit pipeline.py at e8ebd31396ff8553c34084b98b5defb8ebea2817 (main as of 2026-10-01, Hub API) vs "patched":
+# the same file with the fix proposed to microsoft/radedit (keep x0 at index 0 of the inverted latents, paste back
+# timestep_to_latents[:, idx], remove the second paste-back block). diffusers 0.40.0, transformers 5.17.0,
+# accelerate 1.15.0, torch 2.8.0. Film: NIH ChestX-ray14 00000001_000.png (original 1024 px, resized to 512 by the script).
+# Differences are mean absolute differences in gray levels (0-255).
+
+# python radedit/reproduce_radedit_bugs.py --image 00000001_000.png --compare-with patched
+pipeline: microsoft/radedit  (mean absolute difference, gray levels 0-255, far outside the edit mask)
+1. keep = 1 - edit vs the film's VAE round trip,   4 steps:  37.957   (expected ~0)
+1. keep = 1 - edit vs the film's VAE round trip,   8 steps:  16.567   (expected ~0)
+1. keep = 1 - edit vs the film's VAE round trip,  16 steps:   8.022   (expected ~0)
+2. keep = 1 - edit vs empty keep mask, 16 steps:             0.000   (expected > 0: an empty keep mask keeps nothing)
+   empty keep mask vs no keep mask, 16 steps:              8.779   (expected 0: both keep nothing)
+3. no keep mask, microsoft/radedit vs patched, 16 steps: everywhere   0.000, largest 0   (expected 0: identical images)
+
+# python radedit/reproduce_radedit_bugs.py --image 00000001_000.png --pipeline patched
+pipeline: patched  (mean absolute difference, gray levels 0-255, far outside the edit mask)
+1. keep = 1 - edit vs the film's VAE round trip,   4 steps:   0.814   (expected ~0)
+1. keep = 1 - edit vs the film's VAE round trip,   8 steps:   0.357   (expected ~0)
+1. keep = 1 - edit vs the film's VAE round trip,  16 steps:   0.110   (expected ~0)
+2. keep = 1 - edit vs empty keep mask, 16 steps:             5.417   (expected > 0: an empty keep mask keeps nothing)
+   empty keep mask vs no keep mask, 16 steps:              0.000   (expected 0: both keep nothing)
